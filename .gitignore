@@ -1,0 +1,4 @@
+# Ignorar archivos de los subdirectorios de proyectos de Node.js
+/*/node_modules
+/*/dist
+/*/build
