@@ -7,21 +7,20 @@ let usuarioControl = new usuarioC();
 const rolC = require('../app/controllers/RolController');
 let rolControl = new rolC();
 
+const auth = require('../middlewares/authMiddleware');
 
 // Endpoints de usuarios
-router.get('/usuarios', usuarioControl.listar);
-router.get('/usuarios/:external_id', usuarioControl.obtener);
+router.get('/usuarios', auth, usuarioControl.listar);
+router.get('/usuarios/:external_id', auth, usuarioControl.obtener);
 router.post('/usuarios/crear', usuarioControl.crear);
-router.put('/usuarios/:external_id', usuarioControl.actualizar);
-router.patch('/usuarios/:external_id', usuarioControl.actualizar);
-router.delete('/usuarios/:external_id', usuarioControl.eliminar);
+router.patch('/usuarios/:external_id', auth, usuarioControl.actualizar);
+router.delete('/usuarios/:external_id', auth, usuarioControl.eliminar);
 
 
 // Endpoints de roles
-router.get('/roles', rolControl.listar);
-router.get('/roles/:external_id', rolControl.obtener);
-router.post('/roles/crear', rolControl.crear);
-router.put('/roles/:external_id', rolControl.actualizar);
-router.patch('/roles/:external_id', rolControl.actualizar);
+router.get('/roles', auth, rolControl.listar);
+router.get('/roles/:external_id', auth, rolControl.obtener);
+router.post('/roles/crear', auth, rolControl.crear);
+router.patch('/roles/:external_id', auth, rolControl.actualizar);
 
 module.exports = router;
