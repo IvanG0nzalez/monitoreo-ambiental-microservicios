@@ -11,6 +11,8 @@ router.get('/sensores/buscar/:external', sensorControl.obtener_sensor);
 router.post('/sensores/guardar', sensorControl.guardar);
 router.get('/sensores/registros/buscar/:external', sensorControl.obtener_registros_climaticos);
 router.patch('/sensores/modificar/:external',sensorControl.modificar);
+router.get('/sensores/ultimo_registro', sensorControl.ultimo_registro);
+
 //API registros
 router.get('/registros/listar/hoy', registrosControl.listar_hoy);
 router.get('/registros/listar', registrosControl.listar);

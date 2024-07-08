@@ -58,6 +58,25 @@ class SensorControl {
         }
     }
 
+    async ultimo_registro(req,res){
+        var sensores = await sensor.findAll({
+            include:[{
+                model:models.registro_climatico, as:"registro_climatico",
+                attributes:['fecha','hora','valor_medido'],
+                order: [['fecha', 'DESC'], ['hora', 'DESC']],
+                limit: 1,
+            }],
+            attributes: ['alias', 'ip', 'tipo_medicion', 'external_id'],
+        });
+        var lista = sensores.map(sensor => {
+            let sensorJSON = sensor.toJSON();
+            delete sensorJSON.id;
+            return sensorJSON;
+        });
+        res.status(200);
+        res.json({ msg: "OK", code: 200, datos: lista });
+    }
+
     async guardar(req, res) {
         if (req.body.hasOwnProperty('alias') &&
             req.body.hasOwnProperty('ip') &&
