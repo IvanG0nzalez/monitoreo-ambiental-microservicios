@@ -85,6 +85,10 @@ class CuentaController {
 
         return res.status(200).json({ msg: 'Cuenta eliminada', code: 200, datos: cuenta_eliminada });
     }
+
+    async inicio_sesion(req, res) {
+        
+    }
 }
 
 module.exports = CuentaController;
