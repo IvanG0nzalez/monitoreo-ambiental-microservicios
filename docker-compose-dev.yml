@@ -1,0 +1,104 @@
+version: '3.9'
+
+services:
+  servicio-usuarios:
+    build:
+      context: ./microservicio-usuarios
+      dockerfile: Dockerfile.dev
+    image: microservicio-usuarios-dev:v1
+    container_name: microservicio-usuarios-dev
+    volumes:
+      - ./microservicio-usuarios:/app
+      - /app/node_modules
+    ports:
+      - "3001:3000"
+    depends_on:
+      mysql-usuarios:
+        condition: service_healthy
+    env_file:
+      - ./microservicio-usuarios/.env
+  
+  servicio-cuentas:
+    build:
+      context: ./microservicio-cuentas
+      dockerfile: Dockerfile.dev
+    image: microservicio-cuentas-dev:v1
+    container_name: microservicio-cuentas-dev
+    volumes:
+      - ./microservicio-cuentas:/app
+      - /app/node_modules
+    ports:
+      - "3002:3000"
+    depends_on:
+      mysql-cuentas:
+        condition: service_healthy
+    env_file:
+      - ./microservicio-cuentas/.env
+
+  servicio-sensores:
+    build:
+      context: ./microservicio-sensores
+      dockerfile: Dockerfile.dev
+    image: microservicio-sensores-dev:v1
+    container_name: microservicio-sensores-dev
+    volumes:
+      - ./microservicio-sensores:/app
+      - /app/node_modules
+    ports:
+      - "3003:3000"
+    depends_on:
+      mysql-sensores:
+        condition: service_healthy
+    env_file:
+      - ./microservicio-sensores/.env
+  
+  mysql-usuarios:
+    image: mysql:latest
+    container_name: mysql-usuarios-dev
+    ports:
+      - "${DB_USUARIOS_DEV_PORT}:3306"
+    environment:
+      - MYSQL_ROOT_PASSWORD=${DB_USUARIOS_DEV_PASSWORD}
+      - MYSQL_DATABASE=${DB_USUARIOS_DEV_DATABASE}
+      - MYSQL_USER=${DB_USUARIOS_DEV_USERNAME}
+      - MYSQL_PASSWORD=${DB_USUARIOS_DEV_PASSWORD}
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "--silent"]
+      interval: 5s
+      timeout: 10s
+      retries: 10
+      start_period: 5s
+  
+  mysql-cuentas:
+    image: mysql:latest
+    container_name: mysql-cuentas-dev
+    ports:
+      - "${DB_CUENTAS_DEV_PORT}:3306"
+    environment:
+      - MYSQL_ROOT_PASSWORD=${DB_CUENTAS_DEV_PASSWORD}
+      - MYSQL_DATABASE=${DB_CUENTAS_DEV_DATABASE}
+      - MYSQL_USER=${DB_CUENTAS_DEV_USERNAME}
+      - MYSQL_PASSWORD=${DB_CUENTAS_DEV_PASSWORD}
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "--silent"]
+      interval: 5s
+      timeout: 10s
+      retries: 10
+      start_period: 5s
+
+  mysql-sensores:
+    image: mysql:latest
+    container_name: mysql-sensores-dev
+    ports:
+      - "${DB_SENSORES_DEV_PORT}:3306"
+    environment:
+      - MYSQL_ROOT_PASSWORD=${DB_SENSORES_DEV_PASSWORD}
+      - MYSQL_DATABASE=${DB_SENSORES_DEV_DATABASE}
+      - MYSQL_USER=${DB_SENSORES_DEV_USERNAME}
+      - MYSQL_PASSWORD=${DB_SENSORES_DEV_PASSWORD}
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "--silent"]
+      interval: 5s
+      timeout: 10s
+      retries: 10
+      start_period: 5s
