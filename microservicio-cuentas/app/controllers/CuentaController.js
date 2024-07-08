@@ -1,10 +1,44 @@
 "use strict";
 
 const bcrypt = require('bcrypt');
+let jwt = require("jsonwebtoken");
+require('dotenv').config();
+
 const models = require('../models');
 let cuenta = models.cuenta;
 
 class CuentaController {
+    async listar(req, res) {
+        const lista_cuentas = await cuenta.findAll({
+            attributes: ['correo', 'nombre_usuario', 'id_usuario', 'external_id']
+        });
+
+        if (lista_cuentas.length === 0) {
+            return res.status(204).json({ msg: 'No hay cuentas registradas', code: 204, datos: [] });
+        }
+        
+        return res.status(200).json({ msg: 'Lista de cuentas', code: 200, datos: lista_cuentas });
+    }
+
+    async obtener(req, res) {
+        const id_usuario = req.params.id_usuario;
+
+        if (!id_usuario) {
+            return res.status(400).json({ msg: 'Parámetros incorrectos', code: 400, datos: {} });
+        }
+
+        const cuentaAux = await cuenta.findOne({ 
+            where: { id_usuario: id_usuario },
+            attributes: ['correo', 'nombre_usuario', 'id_usuario', 'external_id']
+        });
+
+        if(!cuentaAux) {
+            return res.status(404).json({ msg: 'Cuenta no encontrada', code: 404, datos: {} });
+        }
+
+        return res.status(200).json({ msg: 'Cuenta encontrada', code: 200, datos: cuentaAux });
+    }
+
     async crear(req, res) {
         const { correo, nombre_usuario, clave, id_usuario } = req.body;
 
@@ -87,7 +121,42 @@ class CuentaController {
     }
 
     async inicio_sesion(req, res) {
+        const { correo, clave } = req.body;
+
+        if (!correo || !clave) {
+            return res.status(400).json({ msg: 'Parámetros incorrectos', code: 400, datos: {} });
+        }
+
+        const cuentaAux = await cuenta.findOne({ where: { correo: correo } });
+
+        if(!cuentaAux) {
+            return res.status(404).json({ msg: 'Cuenta no encontrada', code: 404, datos: {} });
+        }
+
+        if (!cuentaAux.estado) {
+            return res.status(401).json({ msg: 'Cuenta deshabilitada', code: 401, datos: {} });
+        }
+
+        const claveCorrecta = await bcrypt.compare(clave, cuentaAux.clave);
+
+        if (!claveCorrecta) {
+            return res.status(401).json({ msg: 'Credenciales incorrectas', code: 401, datos: {} });
+        }
+
+        const token_data = {
+            external: cuentaAux.external_id,
+            check: true,
+        };
+
+        const key = process.env.KEY;
+        const token = jwt.sign(token_data, key, { expiresIn: '4h' });
+
+        var data = {
+            token: token,
+            external: cuentaAux.external_id,
+        };
         
+        return res.status(200).json({ msg: 'Inicio de sesión correcto', code: 200, datos: data });
     }
 }
 
