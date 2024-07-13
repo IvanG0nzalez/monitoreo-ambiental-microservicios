@@ -8,6 +8,7 @@ var indexRouter = require('./routes/index');
 var apiRouter = require('./routes/api');
 
 const models = require('./app/models');
+const rabbitmqHandler = require('./app/rabbitmqHandler');
 
 var app = express();
 
@@ -27,6 +28,10 @@ models.sequelize.sync().then(() =>{
   console.log('\x1b[33m%s\x1b[0m', "Se sincronizaron los modelos");
 }).catch(err => {
   console.log(err,"ERROR!");
+});
+
+rabbitmqHandler.startConsumer().catch(err => {
+  console.log("Error al iniciar el consumidor de RabbitMQ:", err);
 });
 
 app.use(function(req, res, next) {
