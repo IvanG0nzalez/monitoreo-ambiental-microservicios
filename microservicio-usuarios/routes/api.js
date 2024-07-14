@@ -18,9 +18,9 @@ router.delete('/usuarios/:external_id', auth, usuarioControl.eliminar);
 
 
 // Endpoints de roles
-router.get('/roles', auth, rolControl.listar);
+router.get('/roles', rolControl.listar);
 router.get('/roles/:external_id', auth, rolControl.obtener);
-router.post('/roles/crear', auth, rolControl.crear);
+router.post('/roles/crear', rolControl.crear);
 router.patch('/roles/:external_id', auth, rolControl.actualizar);
 
 module.exports = router;

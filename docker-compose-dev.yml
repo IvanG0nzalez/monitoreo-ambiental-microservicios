@@ -1,6 +1,22 @@
 version: '3.9'
 
 services:
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: rabbitmq-dev
+    ports:
+      - "15672:15672"
+      - "5672:5672"
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_DEFAULT_USER}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_DEFAULT_PASS}
+    healthcheck:
+      test: ["CMD", "rabbitmqctl", "status"]
+      interval: 5s
+      timeout: 10s
+      retries: 10
+      start_period: 5s
+
   servicio-usuarios:
     build:
       context: ./microservicio-usuarios
@@ -62,6 +78,8 @@ services:
       - MYSQL_DATABASE=${DB_USUARIOS_DEV_DATABASE}
       - MYSQL_USER=${DB_USUARIOS_DEV_USERNAME}
       - MYSQL_PASSWORD=${DB_USUARIOS_DEV_PASSWORD}
+    volumes:
+      - mysql-usuarios-data:/var/lib/mysql
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "--silent"]
       interval: 5s
@@ -79,6 +97,8 @@ services:
       - MYSQL_DATABASE=${DB_CUENTAS_DEV_DATABASE}
       - MYSQL_USER=${DB_CUENTAS_DEV_USERNAME}
       - MYSQL_PASSWORD=${DB_CUENTAS_DEV_PASSWORD}
+    volumes:
+      - mysql-cuentas-data:/var/lib/mysql
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "--silent"]
       interval: 5s
@@ -96,9 +116,16 @@ services:
       - MYSQL_DATABASE=${DB_SENSORES_DEV_DATABASE}
       - MYSQL_USER=${DB_SENSORES_DEV_USERNAME}
       - MYSQL_PASSWORD=${DB_SENSORES_DEV_PASSWORD}
+    volumes:
+      - mysql-sensores-data:/var/lib/mysql
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "--silent"]
       interval: 5s
       timeout: 10s
       retries: 10
       start_period: 5s
+
+volumes:
+  mysql-usuarios-data:
+  mysql-cuentas-data:
+  mysql-sensores-data:

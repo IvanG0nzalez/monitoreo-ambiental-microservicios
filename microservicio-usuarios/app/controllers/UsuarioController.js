@@ -2,6 +2,7 @@
 
 const models = require('../models');
 const api_cuentas = require('../Conection');
+const { sendMessage, connect } = require('../rabbitmq');
 let rol = models.rol;
 let usuario = models.usuario;
 class UsuarioController {
@@ -77,17 +78,13 @@ class UsuarioController {
                 return res.status(500).json({ msg: 'Error al crear usuario', code: 500, datos: {} });
             }
 
-            const response = await api_cuentas.crear({
-                correo: correo,
-                nombre_usuario: nombre_usuario,
-                clave: clave,
-                id_usuario: nuevo_usuario.id,
+            await connect();
+            await sendMessage('usuario_creado', { 
+                correo,
+                nombre_usuario,
+                clave,
+                id_usuario: nuevo_usuario.id
             });
-
-            if (response.status !== 201) {
-                await transaction.rollback();
-                return res.status(500).json({ msg: 'Error al crear cuenta', code: 500, datos: {} });
-            }
 
             await transaction.commit();
             return res.status(201).json({ msg: 'Usuario creado', code: 201 });
