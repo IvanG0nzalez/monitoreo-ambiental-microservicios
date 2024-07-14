@@ -9,6 +9,10 @@ var apiRouter = require('./routes/api');
 
 const models = require('./app/models');
 const rabbitmqHandler = require('./app/rabbitmqHandler');
+const { connect, consumeMessage } = require('./app/rabbitmq');
+
+const CuentaC = require('./app/controllers/CuentaController');
+let cuentaControl = new CuentaC();
 
 var app = express();
 
@@ -24,14 +28,15 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use('/', indexRouter);
 app.use('/api', apiRouter);
 
-models.sequelize.sync().then(() =>{
+models.sequelize.sync().then(async () =>{
   console.log('\x1b[33m%s\x1b[0m', "Se sincronizaron los modelos");
+
+  await connect();
+
+  await consumeMessage('usuario_creado', cuentaControl.crear);
+
 }).catch(err => {
   console.log(err,"ERROR!");
-});
-
-rabbitmqHandler.startConsumer().catch(err => {
-  console.log("Error al iniciar el consumidor de RabbitMQ:", err);
 });
 
 app.use(function(req, res, next) {
