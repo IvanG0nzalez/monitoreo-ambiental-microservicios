@@ -8,6 +8,7 @@ var indexRouter = require('./routes/index');
 var apiRouter = require('./routes/api');
 
 const models = require('./app/models');
+const { connect, consumeMessage } = require('./app/rabbitmq');
 
 var app = express();
 
@@ -23,11 +24,15 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use('/', indexRouter);
 app.use('/api', apiRouter);
 
-models.sequelize.sync().then(() =>{
+models.sequelize.sync().then(async () =>{
   console.log('\x1b[33m%s\x1b[0m', "Se sincronizaron los modelos");
+  await connect();
+
 }).catch(err => {
   console.log(err,"ERROR!");
 });
+
+
 
 app.use(function(req, res, next) {
   next(createError(404));
