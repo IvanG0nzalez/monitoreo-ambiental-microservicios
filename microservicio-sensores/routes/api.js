@@ -5,6 +5,7 @@ let sensorControl = new sensorC();
 const registrosC = require('../app/controls/RegistroControl');
 let registrosControl = new registrosC();
 
+//TODO agregar auth y jsonwebtoken
 //API sensores
 router.get('/sensores',sensorControl.listar);
 router.get('/sensores/buscar/:external', sensorControl.obtener_sensor);

@@ -5,6 +5,7 @@ let jwt = require("jsonwebtoken");
 require('dotenv').config();
 
 const models = require('../models');
+const { sendMessage } = require('../rabbitmq');
 let cuenta = models.cuenta;
 
 class CuentaController {
@@ -39,35 +40,40 @@ class CuentaController {
         return res.status(200).json({ msg: 'Cuenta encontrada', code: 200, datos: cuentaAux });
     }
 
-    async crear(req, res) {
-        const { correo, nombre_usuario, clave, id_usuario } = req.body;
-
-        if (!correo || !nombre_usuario || !clave || !id_usuario) {
-            return res.status(400).json({ msg: 'Parámetros incorrectos', code: 400, datos: {} });
-        }
+    async crear(message) {
+        const { correo, nombre_usuario, clave, id_usuario } = message;
 
         const cuentaAux = await cuenta.findOne({ where: { correo: correo } });
 
         if(cuentaAux) {
-            return res.status(400).json({ msg: 'Correo ya registrado', code: 400, datos: {} });
+            return await sendMessage('cuenta_creada', { success: false, msg: 'Ya existe una cuenta con ese correo' });
         }
 
-        const UUID = require('uuid');
-        const claveCifrada = await bcrypt.hash(clave, 10);
+        const transaction = await models.sequelize.transaction();
+        
+        try {
+            const UUID = require('uuid');
+            const claveCifrada = await bcrypt.hash(clave, 10);
+    
+            const nueva_cuenta = await cuenta.create({
+                correo: correo,
+                nombre_usuario: nombre_usuario,
+                clave: claveCifrada,
+                id_usuario: id_usuario,
+                external_id: UUID.v4(),
+            });
+    
+            if (!nueva_cuenta) {
+                await transaction.rollback();
+                return await sendMessage('cuenta_creada', { success: false, msg: 'Error al crear la cuenta' });
+            }
 
-        const nueva_cuenta = await cuenta.create({
-            correo: correo,
-            nombre_usuario: nombre_usuario,
-            clave: claveCifrada,
-            id_usuario: id_usuario,
-            external_id: UUID.v4(),
-        });
-
-        if (!nueva_cuenta) {
-            return res.status(500).json({ msg: 'Error al crear cuenta', code: 500, datos: {} });
-        }
-
-        return res.status(201).json({ msg: 'Cuenta creada', code: 201 });
+            await transaction.commit();
+            return await sendMessage('cuenta_creada', { success: true, msg: 'Cuenta creada correctamente' });
+        } catch (error) {
+            await transaction.rollback();
+            return await sendMessage('cuenta_creada', { success: false, msg: 'Error al crear la cuenta' });
+        }       
     }
 
     async actualizar(req, res) {
