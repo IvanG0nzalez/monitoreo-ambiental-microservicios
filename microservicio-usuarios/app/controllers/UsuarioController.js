@@ -160,23 +160,27 @@ class UsuarioController {
 
         try {
             const usuario_actualizado = await usuario.update(camposActualizar, { where: { external_id: external_id }, transaction });
-
             if (!usuario_actualizado) {
                 await transaction.rollback();
                 return res.status(500).json({ msg: 'Error al actualizar usuario', code: 500, datos: {} });
             }
 
             if (correo || nombre_usuario || clave) {
-                const response = await api_cuentas.actualizar({
+                await sendMessage('actualizar_cuenta', {
                     correo: correo,
                     nombre_usuario: nombre_usuario,
                     clave: clave,
-                }, usuarioAux.id);
+                    id_usuario: usuarioAux.id
+                })
 
-                if (response.status !== 200) {
-                    await transaction.rollback();
-                    return res.status(500).json({ msg: 'Error al actualizar cuenta', code: 500, datos: {} });
-                }
+                await consumeMessage('cuenta_actualizada', async (message) => {
+                    const { success, msg } = message;
+                    if (!success) {
+                        await transaction.rollback();
+                        return res.status(500).json({ msg: 'Error al actualizar usuario', code: 500, datos: {} });
+                    }
+                });
+
             }
 
             await transaction.commit();
@@ -210,12 +214,15 @@ class UsuarioController {
                 return res.status(500).json({ msg: 'Error al eliminar usuario', code: 500, datos: {} });
             }
 
-            const response = await api_cuentas.eliminar(usuarioAux.id);
+            await sendMessage('eliminar_cuenta', { id_usuario: usuarioAux.id });
 
-            if (response.status !== 200) {
-                await transaction.rollback();
-                return res.status(500).json({ msg: 'Error al eliminar cuenta', code: 500, datos: {} });
-            }
+            await consumeMessage('cuenta_eliminada', async (message) => {
+                const { success, msg } = message;
+                if (!success) {
+                    await transaction.rollback();
+                    return res.status(500).json({ msg: 'Error al eliminar usuario', code: 500, datos: {} });
+                }
+            });
 
             await transaction.commit();
             return res.status(200).json({ msg: 'Usuario eliminado', code: 200 });
