@@ -24,6 +24,38 @@ class UsuarioController {
         return res.status(200).json({ msg: 'Lista de usuarios', code: 200, datos: lista_usuarios });
     }
 
+    /*async listar_con_cuenta(req, res) {
+        const lista_usuarios = await usuario.findAll({
+            attributes: ['id', 'cedula', 'nombres', 'apellidos', 'external_id'],
+            include: [{
+                model: rol,
+                as: 'rol',
+                attributes: ['nombre', 'external_id']
+            }]
+        });
+
+        if (!lista_usuarios) {
+            return res.status(204).json({ msg: 'No hay usuarios registrados', code: 204, datos: [] });
+        }
+
+        await sendMessage('obtener_cuentas', {});
+        await consumeMessage('cuentas', async (message) => {
+            const { cuentas } = message;
+            const cuentasMap = {};
+            cuentas.forEach(cuenta => {
+                cuentasMap[cuenta.id_usuario] = cuenta;
+            });
+
+            const usuariosConCuentas = lista_usuarios.map(usuario => ({
+                ...usuario.toJSON(),
+                cuenta: cuentasMap[usuario.id] || null
+            }));
+
+            return res.status(200).json({ msg: 'Lista de usuarios', code: 200, datos: usuariosConCuentas });
+        });
+    }*/
+
+
     async obtener(req, res) {
         const { external_id } = req.params;
 
@@ -79,7 +111,7 @@ class UsuarioController {
                 return res.status(500).json({ msg: 'Error al crear usuario', code: 500, datos: {} });
             }
 
-            await sendMessage('usuario_creado', { 
+            await sendMessage('usuario_creado', {
                 correo,
                 nombre_usuario,
                 clave,
@@ -88,7 +120,7 @@ class UsuarioController {
 
             await consumeMessage('cuenta_creada', async (message) => {
                 const { success, msg } = message;
-    
+
                 if (success) {
                     await transaction.commit();
                     return res.status(201).json({ msg: 'Usuario y cuenta creados', code: 201 });
@@ -98,10 +130,10 @@ class UsuarioController {
                 }
             });
 
-           
+
         } catch (error) {
             await transaction.rollback();
-            return res.status(500).json({ msg: 'Error al crear usuario', code: 500, datos: {} });
+            return res.status(500).json({ msg: 'Error al crear usuario', code: 500, datos: error });
         }
     }
 

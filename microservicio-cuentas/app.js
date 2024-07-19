@@ -34,7 +34,7 @@ models.sequelize.sync().then(async () =>{
   await connect();
 
   await consumeMessage('usuario_creado', cuentaControl.crear);
-
+  //await consumeMessage('obtener_cuentas', cuentaControl.listar_rabbit);
 }).catch(err => {
   console.log(err,"ERROR!");
 });

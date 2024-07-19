@@ -17,9 +17,17 @@ class CuentaController {
         if (lista_cuentas.length === 0) {
             return res.status(204).json({ msg: 'No hay cuentas registradas', code: 204, datos: [] });
         }
-        
+
         return res.status(200).json({ msg: 'Lista de cuentas', code: 200, datos: lista_cuentas });
     }
+
+    /*async listar_rabbit(message) {
+        const lista_cuentas = await cuenta.findAll({
+            attributes: ['id_usuario','correo', 'nombre_usuario', 'external_id']
+        });
+        await sendMessage('cuentas', {cuentas:lista_cuentas});
+
+    }*/
 
     async obtener(req, res) {
         const id_usuario = req.params.id_usuario;
@@ -28,12 +36,12 @@ class CuentaController {
             return res.status(400).json({ msg: 'Parámetros incorrectos', code: 400, datos: {} });
         }
 
-        const cuentaAux = await cuenta.findOne({ 
+        const cuentaAux = await cuenta.findOne({
             where: { id_usuario: id_usuario },
             attributes: ['correo', 'nombre_usuario', 'id_usuario', 'external_id']
         });
 
-        if(!cuentaAux) {
+        if (!cuentaAux) {
             return res.status(404).json({ msg: 'Cuenta no encontrada', code: 404, datos: {} });
         }
 
@@ -45,16 +53,16 @@ class CuentaController {
 
         const cuentaAux = await cuenta.findOne({ where: { correo: correo } });
 
-        if(cuentaAux) {
+        if (cuentaAux) {
             return await sendMessage('cuenta_creada', { success: false, msg: 'Ya existe una cuenta con ese correo' });
         }
 
         const transaction = await models.sequelize.transaction();
-        
+
         try {
             const UUID = require('uuid');
             const claveCifrada = await bcrypt.hash(clave, 10);
-    
+
             const nueva_cuenta = await cuenta.create({
                 correo: correo,
                 nombre_usuario: nombre_usuario,
@@ -62,7 +70,7 @@ class CuentaController {
                 id_usuario: id_usuario,
                 external_id: UUID.v4(),
             });
-    
+
             if (!nueva_cuenta) {
                 await transaction.rollback();
                 return await sendMessage('cuenta_creada', { success: false, msg: 'Error al crear la cuenta' });
@@ -73,7 +81,7 @@ class CuentaController {
         } catch (error) {
             await transaction.rollback();
             return await sendMessage('cuenta_creada', { success: false, msg: 'Error al crear la cuenta' });
-        }       
+        }
     }
 
     async actualizar(req, res) {
@@ -86,16 +94,16 @@ class CuentaController {
 
         const cuentaAux = await cuenta.findOne({ where: { id_usuario: id_usuario } });
 
-        if(!cuentaAux) {
+        if (!cuentaAux) {
             return res.status(404).json({ msg: 'Cuenta no encontrada', code: 404, datos: {} });
         }
 
         let camposActualizar = {};
-        if (correo)  camposActualizar.correo = correo;
-        if (nombre_usuario)  camposActualizar.nombre_usuario = nombre_usuario;
-        if (clave)  camposActualizar.clave = await bcrypt.hash(clave, 10);
+        if (correo) camposActualizar.correo = correo;
+        if (nombre_usuario) camposActualizar.nombre_usuario = nombre_usuario;
+        if (clave) camposActualizar.clave = await bcrypt.hash(clave, 10);
 
-        const cuenta_actualizada = await cuenta.update(camposActualizar, { where: {id_usuario: id_usuario} });
+        const cuenta_actualizada = await cuenta.update(camposActualizar, { where: { id_usuario: id_usuario } });
 
         if (!cuenta_actualizada) {
             return res.status(500).json({ msg: 'Error al actualizar cuenta', code: 500, datos: {} });
@@ -113,7 +121,7 @@ class CuentaController {
 
         const cuentaAux = await cuenta.findOne({ where: { id_usuario: id_usuario } });
 
-        if(!cuentaAux) {
+        if (!cuentaAux) {
             return res.status(404).json({ msg: 'Cuenta no encontrada', code: 404, datos: {} });
         }
 
@@ -135,7 +143,7 @@ class CuentaController {
 
         const cuentaAux = await cuenta.findOne({ where: { correo: correo } });
 
-        if(!cuentaAux) {
+        if (!cuentaAux) {
             return res.status(404).json({ msg: 'Cuenta no encontrada', code: 404, datos: {} });
         }
 
@@ -161,7 +169,7 @@ class CuentaController {
             token: token,
             external: cuentaAux.external_id,
         };
-        
+
         return res.status(200).json({ msg: 'Inicio de sesión correcto', code: 200, datos: data });
     }
 }

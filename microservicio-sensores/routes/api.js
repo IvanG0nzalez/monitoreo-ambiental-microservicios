@@ -4,6 +4,7 @@ const sensorC = require('../app/controls/SensorControl');
 let sensorControl = new sensorC();
 const registrosC = require('../app/controls/RegistroControl');
 let registrosControl = new registrosC();
+const auth = require('../middlewares/authMiddleware');
 
 //TODO agregar auth y jsonwebtoken
 //API sensores

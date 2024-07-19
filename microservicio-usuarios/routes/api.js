@@ -11,6 +11,7 @@ const auth = require('../middlewares/authMiddleware');
 
 // Endpoints de usuarios
 router.get('/usuarios', auth, usuarioControl.listar);
+//router.get('/usuarios_cuentas', auth, usuarioControl.listar_con_cuenta);
 router.get('/usuarios/:external_id', auth, usuarioControl.obtener);
 router.post('/usuarios/crear', usuarioControl.crear);
 router.patch('/usuarios/:external_id', auth, usuarioControl.actualizar);

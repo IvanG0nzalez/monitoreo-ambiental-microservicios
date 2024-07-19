@@ -31,6 +31,8 @@ services:
     ports:
       - "3001:3000"
     depends_on:
+      rabbitmq:
+        condition: service_healthy
       mysql-usuarios:
         condition: service_healthy
     env_file:
@@ -48,6 +50,8 @@ services:
     ports:
       - "3002:3000"
     depends_on:
+      rabbitmq:
+        condition: service_healthy
       mysql-cuentas:
         condition: service_healthy
     env_file:
