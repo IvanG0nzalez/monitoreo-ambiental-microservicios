@@ -17,7 +17,7 @@ class RegistroControl {
             where: { fecha: fechaActual },
             include: [{
                 model: models.sensor, as: "sensor",
-                attributes: ['alias', 'ip', 'tipo_medicion', 'external_id'],
+                attributes: ['alias', 'cadena_conexion', 'tipo_medicion', 'external_id'],
             },],
             attributes: ['fecha', 'hora', 'valor_medido', 'external_id'],
         });
@@ -34,7 +34,7 @@ class RegistroControl {
         var lista = await registros.findAll({
             include: [{
                 model: models.sensor, as: "sensor",
-                attributes: ['alias', 'ip', 'tipo_medicion', 'external_id'],
+                attributes: ['alias', 'cadena_conexion', 'tipo_medicion', 'external_id'],
             },],
             attributes: ['fecha', 'hora', 'valor_medido', 'external_id'],
         });
@@ -48,7 +48,7 @@ class RegistroControl {
             where: { fecha: fecha },
             include: [{
                 model: models.sensor, as: "sensor",
-                attributes: ['alias', 'ip', 'tipo_medicion', 'external_id'],
+                attributes: ['alias', 'cadena_conexion', 'tipo_medicion', 'external_id'],
             },],
             attributes: ['fecha', 'hora', 'valor_medido', 'external_id'],
         });
@@ -95,6 +95,6 @@ class RegistroControl {
             res.json({ msg: "Error", tag: "Faltan datos", code: 400 });
         }
     }
-
 }
+
 module.exports = RegistroControl;
