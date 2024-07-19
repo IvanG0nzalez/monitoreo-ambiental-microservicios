@@ -2,13 +2,18 @@
 var models = require('../models');
 var sensor = models.sensor;
 var registros = models.registro_climatico;
-const ipv4Regex = /^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$/;
-
-
+const connectionStringRegex = /^Endpoint=sb:\/\/.*\.servicebus\.windows\.net\/;SharedAccessKeyName=.*;SharedAccessKey=.*;EntityPath=.*$/;
+const { EventHubConsumerClient } = require("@azure/event-hubs");
+const { v4: uuidv4 } = require('uuid');
 class SensorControl {
+
+    constructor() {
+        this.activeClients = new Map();
+    }
+
     async listar(req, res) {
         var lista = await sensor.findAll({
-            attributes: ['alias', 'ip', 'tipo_medicion', 'external_id'],
+            attributes: ['alias', 'cadena_conexion', 'tipo_medicion', 'external_id'],
         });
         res.status(200);
         res.json({ msg: "OK", code: 200, datos: lista });
@@ -19,7 +24,7 @@ class SensorControl {
         try {
             var sensors = await sensor.findOne({
                 where: { external_id: external },
-                attributes: ['alias', 'ip', 'tipo_medicion', 'external_id'],
+                attributes: ['alias', 'cadena_conexion', 'tipo_medicion', 'external_id'],
             });
             if (sensors === undefined || sensors == null) {
                 res.status(404);
@@ -58,15 +63,15 @@ class SensorControl {
         }
     }
 
-    async ultimo_registro(req,res){
+    async ultimo_registro(req, res) {
         var sensores = await sensor.findAll({
-            include:[{
-                model:models.registro_climatico, as:"registro_climatico",
-                attributes:['fecha','hora','valor_medido'],
+            include: [{
+                model: models.registro_climatico, as: "registro_climatico",
+                attributes: ['fecha', 'hora', 'valor_medido'],
                 order: [['fecha', 'DESC'], ['hora', 'DESC']],
                 limit: 1,
             }],
-            attributes: ['alias', 'ip', 'tipo_medicion', 'external_id'],
+            attributes: ['alias', 'cadena_conexion', 'tipo_medicion', 'external_id'],
         });
         var lista = sensores.map(sensor => {
             let sensorJSON = sensor.toJSON();
@@ -79,16 +84,16 @@ class SensorControl {
 
     async guardar(req, res) {
         if (req.body.hasOwnProperty('alias') &&
-            req.body.hasOwnProperty('ip') &&
+            req.body.hasOwnProperty('cadena_conexion') &&
             req.body.hasOwnProperty('tipo_medicion')) {
-            if (!ipv4Regex.test(req.body.ip)) {
+            if (!connectionStringRegex.test(req.body.cadena_conexion)) {
                 res.status(400);
-                res.json({ msg: "Error", tag: "La dirección IP no es válida", code: 400 });
+                res.json({ msg: "Error", tag: "La cadena de conexión no es válida", code: 400 });
             } else {
                 var uuid = require('uuid');
                 var data = {
                     alias: req.body.alias,
-                    ip: req.body.ip,
+                    cadena_conexion: req.body.cadena_conexion,
                     tipo_medicion: req.body.tipo_medicion,
                     external_id: uuid.v4()
                 }
@@ -102,8 +107,6 @@ class SensorControl {
                     res.json({ msg: "OK", tag: "Sensor guardado", code: 200 });
                 }
             }
-
-
         } else {
             res.status(400);
             res.json({ msg: "Error", tag: "Faltan datos", code: 400 });
@@ -118,13 +121,13 @@ class SensorControl {
             if (tipo_medicion && tipo_medicion != "Temperatura" && tipo_medicion != "Humedad" && tipo_medicion != "CO2") {
                 return res.status(400).json({ msg: "Error", tag: "Los tipos disponibles son Temperatura, Humedad y CO2", code: 400 });
             }
-            if (req.body.ip && !ipv4Regex.test(req.body.ip)) {
-                return res.status(400).json({ msg: "Error", tag: "La dirección IP no es válida", code: 400 });
+            if (req.body.cadena_conexion && !connectionStringRegex.test(req.body.cadena_conexion)) {
+                return res.status(400).json({ msg: "Error", tag: "La cadena de conexión no es válida", code: 400 });
             }
             try {
                 const data = {
                     alias: req.body.alias !== undefined ? req.body.alias : sensors.alias,
-                    ip: req.body.ip !== undefined ? req.body.ip : sensors.ip,
+                    cadena_conexion: req.body.cadena_conexion !== undefined ? req.body.cadena_conexion : sensors.cadena_conexion,
                     tipo_medicion: req.body.tipo_medicion !== undefined ? req.body.tipo_medicion : sensor.tipo_medicion,
                 };
                 await sensors.update(data);
@@ -133,10 +136,118 @@ class SensorControl {
             } catch (error) {
                 return res.status(500).json({ msg: "Error", tag: "Error interno", code: 500 });
             }
-
         } catch (error) {
             res.status(404);
             res.json({ msg: "Error", tag: "Ese sensor no existe", code: 404 });
+        }
+    }
+
+
+    async iniciarMonitoreo() {
+        const sensores = await sensor.findAll({
+            attributes: ['alias', 'cadena_conexion', 'tipo_medicion', 'external_id'],
+        });
+
+        for (const sensorData of sensores) {
+            this.monitorearSensor(sensorData);
+        }
+    }
+
+    async monitorearSensor(sensorData) {
+        const client = new EventHubConsumerClient("$Default", sensorData.cadena_conexion);
+
+        console.log(`Iniciando monitoreo para sensor ${sensorData.alias} - ${sensorData.tipo_medicion}`);
+
+        const subscription = client.subscribe({
+            processEvents: async (events, context) => {
+                for (const event of events) {
+                    if (event.systemProperties["iothub-connection-device-id"] === sensorData.alias) {
+                        console.log(`Mensaje recibido para ${sensorData.alias}: ${JSON.stringify(event.body)}`);
+                        const datos = event.body;
+                        await this.guardarRegistro(sensorData, datos);
+                    }
+                }
+            },
+            processError: async (err, context) => {
+                console.error(`Error en sensor ${sensorData.alias}: ${err.message}`);
+            }
+        });
+
+        // Guardamos el cliente y la suscripción
+        this.activeClients.set(sensorData.external_id, { client, subscription });
+    }
+
+    async guardarRegistro(sensorData, datos) {
+        let valorMedido;
+
+        switch (sensorData.tipo_medicion) {
+            case 'Temperatura':
+                valorMedido = datos.Temperatura;
+                break;
+            case 'Humedad':
+                valorMedido = datos.Humedad;
+                break;
+            case 'CO2':
+                valorMedido = datos.CO2;
+                break;
+            default:
+                console.log(`Tipo de medición no reconocido: ${sensorData.tipo_medicion}`);
+                return;
+        }
+
+        if (valorMedido !== undefined && valorMedido !== null) {
+            try {
+                // Primero, obtenemos el id del sensor
+                const sensorEncontrado = await sensor.findOne({
+                    where: {
+                        alias: sensorData.alias,
+                        tipo_medicion: sensorData.tipo_medicion
+                    }
+                });
+
+                if (!sensorEncontrado) {
+                    console.log(`Sensor no encontrado para ${sensorData.alias} - ${sensorData.tipo_medicion}`);
+                    return;
+                }
+
+                await registros.create({
+                    fecha: new Date().toISOString().split('T')[0],
+                    hora: new Date().toTimeString().split(' ')[0],
+                    valor_medido: valorMedido,
+                    id_sensor: sensorEncontrado.id,  // Usamos el id del sensor encontrado
+                    external_id: uuidv4()
+                });
+                console.log(`Registro guardado para ${sensorData.alias} - ${sensorData.tipo_medicion}: ${valorMedido}`);
+            } catch (error) {
+                console.error(`Error al guardar registro: ${error.message}`);
+            }
+        } else {
+            console.log(`Valor nulo o indefinido para ${sensorData.alias} - ${sensorData.tipo_medicion}, no se guarda.`);
+        }
+    }
+
+
+
+    async iniciarMonitoreoTodosSensores(req, res) {
+        try {
+            await this.iniciarMonitoreo();
+            res.status(200).json({ msg: "Monitoreo de sensores iniciado", code: 200 });
+        } catch (error) {
+            res.status(500).json({ msg: "Error al iniciar el monitoreo", code: 500, error: error.message });
+        }
+    }
+
+    async detenerMonitoreo(req, res) {
+        try {
+            for (const [sensorId, { client, subscription }] of this.activeClients) {
+                await subscription.close();
+                await client.close();
+                console.log(`Monitoreo detenido para sensor ${sensorId}`);
+            }
+            this.activeClients.clear();
+            res.status(200).json({ msg: "Monitoreo de sensores detenido", code: 200 });
+        } catch (error) {
+            res.status(500).json({ msg: "Error al detener el monitoreo", code: 500, error: error.message });
         }
     }
 

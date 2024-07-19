@@ -8,12 +8,14 @@ const auth = require('../middlewares/authMiddleware');
 
 //TODO agregar auth y jsonwebtoken
 //API sensores
-router.get('/sensores',sensorControl.listar);
-router.get('/sensores/:external', auth, sensorControl.obtener_sensor);
+router.get('/sensores',auth, sensorControl.listar);
+router.get('/sensores/buscar/:external', auth, sensorControl.obtener_sensor);
 router.post('/sensores/guardar', auth, sensorControl.guardar);
-router.get('/sensores/registros/:external', auth, sensorControl.obtener_registros_climaticos);
+router.get('/sensores/registros/buscar/:external', auth, sensorControl.obtener_registros_climaticos);
 router.patch('/sensores/modificar/:external',auth,sensorControl.modificar);
 router.get('/sensores/ultimo_registro',auth, sensorControl.ultimo_registro);
+router.post('/iniciar-monitoreo', sensorControl.iniciarMonitoreoTodosSensores.bind(sensorControl));
+router.post('/detener-monitoreo', (req, res) => sensorControl.detenerMonitoreo(req, res));
 
 //API registros
 router.get('/registros/listar/hoy', registrosControl.listar_hoy);
