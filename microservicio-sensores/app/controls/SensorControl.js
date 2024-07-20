@@ -5,6 +5,9 @@ var registros = models.registro_climatico;
 const connectionStringRegex = /^Endpoint=sb:\/\/.*\.servicebus\.windows\.net\/;SharedAccessKeyName=.*;SharedAccessKey=.*;EntityPath=.*$/;
 const { EventHubConsumerClient } = require("@azure/event-hubs");
 const { v4: uuidv4 } = require('uuid');
+
+const registrosC = require('./RegistroControl');
+let registrosControl = new registrosC();
 class SensorControl {
 
     constructor() {
@@ -164,7 +167,7 @@ class SensorControl {
                     if (event.systemProperties["iothub-connection-device-id"] === sensorData.alias) {
                         console.log(`Mensaje recibido para ${sensorData.alias}: ${JSON.stringify(event.body)}`);
                         const datos = event.body;
-                        await this.guardarRegistro(sensorData, datos);
+                        await registrosControl.guardar(sensorData, datos);
                     }
                 }
             },
@@ -176,57 +179,6 @@ class SensorControl {
         // Guardamos el cliente y la suscripción
         this.activeClients.set(sensorData.external_id, { client, subscription });
     }
-
-    async guardarRegistro(sensorData, datos) {
-        let valorMedido;
-
-        switch (sensorData.tipo_medicion) {
-            case 'Temperatura':
-                valorMedido = datos.Temperatura;
-                break;
-            case 'Humedad':
-                valorMedido = datos.Humedad;
-                break;
-            case 'CO2':
-                valorMedido = datos.CO2;
-                break;
-            default:
-                console.log(`Tipo de medición no reconocido: ${sensorData.tipo_medicion}`);
-                return;
-        }
-
-        if (valorMedido !== undefined && valorMedido !== null) {
-            try {
-                // Primero, obtenemos el id del sensor
-                const sensorEncontrado = await sensor.findOne({
-                    where: {
-                        alias: sensorData.alias,
-                        tipo_medicion: sensorData.tipo_medicion
-                    }
-                });
-
-                if (!sensorEncontrado) {
-                    console.log(`Sensor no encontrado para ${sensorData.alias} - ${sensorData.tipo_medicion}`);
-                    return;
-                }
-
-                await registros.create({
-                    fecha: new Date().toISOString().split('T')[0],
-                    hora: new Date().toTimeString().split(' ')[0],
-                    valor_medido: valorMedido,
-                    id_sensor: sensorEncontrado.id,  // Usamos el id del sensor encontrado
-                    external_id: uuidv4()
-                });
-                console.log(`Registro guardado para ${sensorData.alias} - ${sensorData.tipo_medicion}: ${valorMedido}`);
-            } catch (error) {
-                console.error(`Error al guardar registro: ${error.message}`);
-            }
-        } else {
-            console.log(`Valor nulo o indefinido para ${sensorData.alias} - ${sensorData.tipo_medicion}, no se guarda.`);
-        }
-    }
-
-
 
     async iniciarMonitoreoTodosSensores(req, res) {
         try {
