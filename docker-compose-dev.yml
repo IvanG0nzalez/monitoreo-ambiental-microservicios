@@ -19,20 +19,6 @@ services:
       retries: 10
       start_period: 5s
 
-  servicio-frontend:
-    build:
-      context: ./frontend-microservicios
-      dockerfile: Dockerfile.dev
-    image: servicio-frontend-dev:v1
-    container_name: servicio-frontend-dev
-    volumes:
-      - ./frontend-microservicios:/app
-      - /app/node_modules
-    ports:
-      - "3000:3000"
-    depends_on:
-      - kong
-
   servicio-usuarios:
     build:
       context: ./microservicio-usuarios
