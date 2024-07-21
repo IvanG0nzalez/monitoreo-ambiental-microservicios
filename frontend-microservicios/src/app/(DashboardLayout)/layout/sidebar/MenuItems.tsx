@@ -1,12 +1,14 @@
 import {
   IconAperture,
   IconCopy,
+  IconCpu2,
   IconDeviceHeartMonitor,
   IconLayoutDashboard,
   IconLogin,
   IconMoodHappy,
   IconTypography,
   IconUserPlus,
+  IconUsersGroup,
 } from "@tabler/icons-react";
 
 import { uniqueId } from "lodash";
@@ -20,7 +22,7 @@ const Menuitems = [
     id: uniqueId(),
     title: "Monitoreo",
     icon: IconDeviceHeartMonitor,
-    href: "/",
+    href: "/inicio",
   },
 
   {
@@ -30,13 +32,13 @@ const Menuitems = [
   {
     id: uniqueId(),
     title: "Sensores",
-    icon: IconDeviceHeartMonitor,
+    icon: IconCpu2,
     href: "/control/sensores",
   },
   {
     id: uniqueId(),
     title: "Cuentas",
-    icon: IconDeviceHeartMonitor,
+    icon: IconUsersGroup,
     href: "/control/cuentas",
   },
   
@@ -58,22 +60,22 @@ const Menuitems = [
   //   icon: IconCopy,
   //   href: "/utilities/shadow",
   // },
-  {
-    navlabel: true,
-    subheader: "Autentificación",
-  },
-  {
-    id: uniqueId(),
-    title: "Iniciar Sesión",
-    icon: IconLogin,
-    href: "/authentication/login",
-  },
-  {
-    id: uniqueId(),
-    title: "Registro",
-    icon: IconUserPlus,
-    href: "/authentication/register",
-  },
+  // {
+  //   navlabel: true,
+  //   subheader: "Autentificación",
+  // },
+  // {
+  //   id: uniqueId(),
+  //   title: "Iniciar Sesión",
+  //   icon: IconLogin,
+  //   href: "/authentication/login",
+  // },
+  // {
+  //   id: uniqueId(),
+  //   title: "Registro",
+  //   icon: IconUserPlus,
+  //   href: "/authentication/register",
+  // },
   // {
   //   navlabel: true,
   //   subheader: "Extra",

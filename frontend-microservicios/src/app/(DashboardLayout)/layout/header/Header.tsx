@@ -68,7 +68,7 @@ const Header = ({ toggleMobileSidebar }: ItemType) => {
 
         <Box flexGrow={1} />
         <Stack spacing={1} direction="row" alignItems="center">
-          <Button
+          {/* <Button
             variant="contained"
             component={Link}
             href="/authentication/login"
@@ -76,7 +76,7 @@ const Header = ({ toggleMobileSidebar }: ItemType) => {
             color="primary"
           >
             Iniciar Sesión
-          </Button>
+          </Button> */}
           <Profile />
         </Stack>
       </ToolbarStyled>

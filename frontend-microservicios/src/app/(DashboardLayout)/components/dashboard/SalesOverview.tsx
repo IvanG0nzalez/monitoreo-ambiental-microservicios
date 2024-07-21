@@ -5,23 +5,24 @@ import DashboardCard from '@/app/(DashboardLayout)/components/shared/DashboardCa
 import dynamic from "next/dynamic";
 const Chart = dynamic(() => import("react-apexcharts"), { ssr: false });
 
-
 const SalesOverview = () => {
-
     // select
-    const [month, setMonth] = React.useState('1');
+    const [measurement, setMeasurement] = React.useState('CO2');
 
     const handleChange = (event: any) => {
-        setMonth(event.target.value);
+        setMeasurement(event.target.value);
     };
 
     // chart color
     const theme = useTheme();
-    const primary = theme.palette.primary.main;
-    const secondary = theme.palette.secondary.main;
+    const colors: { [key: string]: string } = {
+        CO2: theme.palette.primary.main,
+        Temperatura: theme.palette.secondary.main,
+        Humedad: theme.palette.success.main,
+    };
 
-    // chart
-    const optionscolumnchart: any = {
+    // chart options
+    const optionsColumnChart: any = {
         chart: {
             type: 'bar',
             fontFamily: "'Plus Jakarta Sans', sans-serif;",
@@ -31,24 +32,23 @@ const SalesOverview = () => {
             },
             height: 370,
         },
-        colors: [primary, secondary],
+        colors: [colors[measurement]],
         plotOptions: {
             bar: {
                 horizontal: false,
                 barHeight: '60%',
-                columnWidth: '42%',
+                columnWidth: '20%',
                 borderRadius: [6],
                 borderRadiusApplication: 'end',
                 borderRadiusWhenStacked: 'all',
             },
         },
-
         stroke: {
             show: true,
             width: 5,
             lineCap: "butt",
             colors: ["transparent"],
-          },
+        },
         dataLabels: {
             enabled: false,
         },
@@ -78,39 +78,46 @@ const SalesOverview = () => {
             fillSeriesColor: false,
         },
     };
-    const seriescolumnchart: any = [
-        {
-            name: 'CO2',
-            data: [355, 390, 300, 350, 390, 180, 355, 390],
-        },
-        {
-            name: 'Temperatura',
-            data: [280, 250, 325, 215, 250, 310, 280, 250],
-        },
-        {
-            name: 'Humedad',
-            data: [180, 150, 225, 115, 150, 210, 180, 150],
-        },
-    ];
+
+    // chart data
+    const chartData: any = {
+        CO2: [
+            {
+                name: 'CO2',
+                data: [355, 390, 300, 350, 390, 180, 355, 390],
+            },
+        ],
+        Temperatura: [
+            {
+                name: 'Temperatura',
+                data: [280, 250, 325, 215, 250, 310, 280, 250],
+            },
+        ],
+        Humedad: [
+            {
+                name: 'Humedad',
+                data: [180, 150, 225, 115, 150, 210, 180, 150],
+            },
+        ],
+    };
 
     return (
-
         <DashboardCard title="Valores Medidos" action={
             <Select
-                labelId="month-dd"
-                id="month-dd"
-                value={month}
+                labelId="measurement-dd"
+                id="measurement-dd"
+                value={measurement}
                 size="small"
                 onChange={handleChange}
             >
-                <MenuItem value={1}>March 2023</MenuItem>
-                <MenuItem value={2}>April 2023</MenuItem>
-                <MenuItem value={3}>May 2023</MenuItem>
+                <MenuItem value="CO2">CO2</MenuItem>
+                <MenuItem value="Temperatura">Temperatura</MenuItem>
+                <MenuItem value="Humedad">Humedad</MenuItem>
             </Select>
         }>
             <Chart
-                options={optionscolumnchart}
-                series={seriescolumnchart}
+                options={optionsColumnChart}
+                series={chartData[measurement]}
                 type="bar"
                 height={370} width={"100%"}
             />

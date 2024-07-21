@@ -1,21 +1,21 @@
-
 import dynamic from "next/dynamic";
 const Chart = dynamic(() => import("react-apexcharts"), { ssr: false });
 import { useTheme } from '@mui/material/styles';
 import { Grid, Stack, Typography, Avatar } from '@mui/material';
-import { IconArrowUpLeft } from '@tabler/icons-react';
+import { IconAlertCircle } from '@tabler/icons-react';
 
 import DashboardCard from '@/app/(DashboardLayout)/components/shared/DashboardCard';
 
-const YearlyBreakup = () => {
+const AirQualityAlert = () => {
   // chart color
   const theme = useTheme();
   const primary = theme.palette.primary.main;
   const primarylight = '#ecf2ff';
-  const successlight = theme.palette.success.light;
+  const danger = theme.palette.error.main;
+  const warning = theme.palette.warning.main;
 
   // chart
-  const optionscolumnchart: any = {
+  const optionsDonutChart: any = {
     chart: {
       type: 'donut',
       fontFamily: "'Plus Jakarta Sans', sans-serif;",
@@ -25,7 +25,7 @@ const YearlyBreakup = () => {
       },
       height: 155,
     },
-    colors: [primary, primarylight, '#F9F9FD'],
+    colors: [primary, warning, danger],
     plotOptions: {
       pie: {
         startAngle: 0,
@@ -60,25 +60,22 @@ const YearlyBreakup = () => {
       },
     ],
   };
-  const seriescolumnchart: any = [38, 40, 25];
+  const seriesDonutChart: any = [30, 40, 30];
 
   return (
-    <DashboardCard title="Yearly Breakup">
+    <DashboardCard title="Alerta de Nivel de Aire">
       <Grid container spacing={3}>
         {/* column */}
         <Grid item xs={7} sm={7}>
           <Typography variant="h3" fontWeight="700">
-            $36,358
+            Calidad del Aire: Malo
           </Typography>
           <Stack direction="row" spacing={1} mt={1} alignItems="center">
-            <Avatar sx={{ bgcolor: successlight, width: 27, height: 27 }}>
-              <IconArrowUpLeft width={20} color="#39B69A" />
+            <Avatar sx={{ bgcolor: danger, width: 27, height: 27 }}>
+              <IconAlertCircle width={20} color="#fff" />
             </Avatar>
-            <Typography variant="subtitle2" fontWeight="600">
-              +9%
-            </Typography>
-            <Typography variant="subtitle2" color="textSecondary">
-              last year
+            <Typography variant="subtitle2" fontWeight="600" color={danger}>
+              Peligroso
             </Typography>
           </Stack>
           <Stack spacing={3} mt={5} direction="row">
@@ -87,15 +84,23 @@ const YearlyBreakup = () => {
                 sx={{ width: 9, height: 9, bgcolor: primary, svg: { display: 'none' } }}
               ></Avatar>
               <Typography variant="subtitle2" color="textSecondary">
-                2022
+                Bueno
               </Typography>
             </Stack>
             <Stack direction="row" spacing={1} alignItems="center">
               <Avatar
-                sx={{ width: 9, height: 9, bgcolor: primarylight, svg: { display: 'none' } }}
+                sx={{ width: 9, height: 9, bgcolor: warning, svg: { display: 'none' } }}
               ></Avatar>
               <Typography variant="subtitle2" color="textSecondary">
-                2023
+                Moderado
+              </Typography>
+            </Stack>
+            <Stack direction="row" spacing={1} alignItems="center">
+              <Avatar
+                sx={{ width: 9, height: 9, bgcolor: danger, svg: { display: 'none' } }}
+              ></Avatar>
+              <Typography variant="subtitle2" color="textSecondary">
+                Malo
               </Typography>
             </Stack>
           </Stack>
@@ -103,8 +108,8 @@ const YearlyBreakup = () => {
         {/* column */}
         <Grid item xs={5} sm={5}>
           <Chart
-            options={optionscolumnchart}
-            series={seriescolumnchart}
+            options={optionsDonutChart}
+            series={seriesDonutChart}
             type="donut"
             height={150} width={"100%"}
           />
@@ -114,4 +119,4 @@ const YearlyBreakup = () => {
   );
 };
 
-export default YearlyBreakup;
+export default AirQualityAlert;
