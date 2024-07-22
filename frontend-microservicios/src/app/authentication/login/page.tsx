@@ -8,7 +8,7 @@ import AuthLogin from "../auth/AuthLogin";
 
 const Login2 = () => {
   return (
-    <PageContainer title="Login" description="this is Login page">
+    <PageContainer title="Inicio de Sesión" description="Página de Inicio de Sesión">
       <Box
         sx={{
           position: "relative",
@@ -57,33 +57,6 @@ const Login2 = () => {
                   >
                     Tu aplicación de monitoreo favorita
                   </Typography>
-                }
-                subtitle={
-                  <Stack
-                    direction="row"
-                    spacing={1}
-                    justifyContent="center"
-                    mt={3}
-                  >
-                    <Typography
-                      color="textSecondary"
-                      variant="h6"
-                      fontWeight="500"
-                    >
-                      ¿Nuevo por aquí?
-                    </Typography>
-                    <Typography
-                      component={Link}
-                      href="/authentication/register"
-                      fontWeight="500"
-                      sx={{
-                        textDecoration: "none",
-                        color: "primary.main",
-                      }}
-                    >
-                      Crear una cuenta
-                    </Typography>
-                  </Stack>
                 }
               />
             </Card>
