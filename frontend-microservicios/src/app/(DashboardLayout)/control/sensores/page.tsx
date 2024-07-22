@@ -24,6 +24,7 @@ import ThermostatIcon from "@mui/icons-material/Thermostat";
 import OpacityIcon from "@mui/icons-material/Opacity";
 import LocalFireDepartmentIcon from "@mui/icons-material/LocalFireDepartment";
 import AirIcon from "@mui/icons-material/Air";
+import Chatbot from "@/app/chatbot/chatbot";
 
 const SensorDisplayPage = () => {
   const [sensors, setSensors] = useState([
@@ -309,6 +310,7 @@ const SensorDisplayPage = () => {
           </Button>
         </DialogActions>
       </Dialog>
+      <Chatbot />
     </PageContainer>
   );
 };

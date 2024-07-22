@@ -23,6 +23,7 @@ import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import DashboardCard from "@/app/(DashboardLayout)/components/shared/DashboardCard";
 import PageContainer from "../../components/container/PageContainer";
+import Chatbot from "@/app/chatbot/chatbot";
 
 const UserAccounts = () => {
   // Datos de ejemplo para las cuentas de usuario
@@ -385,6 +386,7 @@ const UserAccounts = () => {
           </Button>
         </DialogActions>
       </Dialog>
+      <Chatbot />
     </PageContainer>
   );
 };
