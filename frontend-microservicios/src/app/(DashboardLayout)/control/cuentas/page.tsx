@@ -34,6 +34,7 @@ const UserAccounts = () => {
       correo: "example@gmail.comxd",
       identificacion: "1105966360",
       rol: "Administrador",
+      clave: "password1",
     },
     {
       id: 2,
@@ -42,6 +43,7 @@ const UserAccounts = () => {
       correo: "example@gmail.comxd",
       identificacion: "1105966360",
       rol: "Usuario",
+      clave: "password2",
     },
   ]);
 
@@ -51,6 +53,7 @@ const UserAccounts = () => {
     correo: "",
     identificacion: "",
     rol: "",
+    clave: "",
   });
 
   const [editUser, setEditUser] = useState({
@@ -60,6 +63,7 @@ const UserAccounts = () => {
     correo: "",
     identificacion: "",
     rol: "",
+    clave: "",
   });
 
   const [open, setOpen] = useState(false);
@@ -81,6 +85,7 @@ const UserAccounts = () => {
       correo: string;
       identificacion: string;
       rol: string;
+      clave: string;
     }>
   ) => {
     setEditUser(user);
@@ -103,6 +108,7 @@ const UserAccounts = () => {
       correo: "",
       identificacion: "",
       rol: "",
+      clave: "",
     });
     handleClose();
   };
@@ -264,9 +270,26 @@ const UserAccounts = () => {
             margin="normal"
           />
           <TextField
+            name="correo"
+            label="Correo"
+            value={newUser.correo}
+            onChange={handleChange}
+            fullWidth
+            margin="normal"
+          />
+          <TextField
             name="identificacion"
             label="Identificación"
             value={newUser.identificacion}
+            onChange={handleChange}
+            fullWidth
+            margin="normal"
+          />
+          <TextField
+            name="clave"
+            label="Clave"
+            type="password"
+            value={newUser.clave}
             onChange={handleChange}
             fullWidth
             margin="normal"
@@ -315,9 +338,26 @@ const UserAccounts = () => {
             margin="normal"
           />
           <TextField
+            name="correo"
+            label="Correo"
+            value={editUser.correo}
+            onChange={handleEditChange}
+            fullWidth
+            margin="normal"
+          />
+          <TextField
             name="identificacion"
             label="Identificación"
             value={editUser.identificacion}
+            onChange={handleEditChange}
+            fullWidth
+            margin="normal"
+          />
+          <TextField
+            name="clave"
+            label="Clave"
+            type="password"
+            value={editUser.clave}
             onChange={handleEditChange}
             fullWidth
             margin="normal"
