@@ -1,6 +1,18 @@
 version: '3.9'
 
 services:
+  frontend:
+    build:
+      context: ./frontend-microservicios
+      dockerfile: Dockerfile.dev
+    image: frontend-microservicios-dev:v1
+    container_name: frontend-microservicios-dev
+    volumes:
+      - ./frontend-microservicios:/app
+      - /app/node_modules
+    ports:
+      - "3000:3000"
+
   rabbitmq:
     image: rabbitmq:3-management
     container_name: rabbitmq-dev
