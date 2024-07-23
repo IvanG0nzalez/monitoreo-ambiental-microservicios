@@ -194,6 +194,7 @@ class CuentaController {
         var data = {
             token: token,
             external: cuentaAux.external_id,
+            nombre_usuario: cuentaAux.nombre_usuario,
         };
 
         return res.status(200).json({ msg: 'Inicio de sesión correcto', code: 200, datos: data });

@@ -10,7 +10,7 @@ let rolControl = new rolC();
 const auth = require('../middlewares/authMiddleware');
 
 // Endpoints de usuarios
-router.get('/usuarios', auth, usuarioControl.listar);
+router.get('/usuarios',auth, usuarioControl.listar);
 //router.get('/usuarios_cuentas', auth, usuarioControl.listar_con_cuenta);
 router.get('/usuarios/:external_id', auth, usuarioControl.obtener);
 router.post('/usuarios/crear', usuarioControl.crear);
@@ -19,9 +19,9 @@ router.delete('/usuarios/:external_id', auth, usuarioControl.eliminar);
 
 
 // Endpoints de roles
-router.get('/roles', rolControl.listar);
+router.get('/roles', auth, rolControl.listar);
 router.get('/roles/:external_id', auth, rolControl.obtener);
-router.post('/roles/crear', rolControl.crear);
+router.post('/roles/crear', auth, rolControl.crear);
 router.patch('/roles/:external_id', auth, rolControl.actualizar);
 
 module.exports = router;

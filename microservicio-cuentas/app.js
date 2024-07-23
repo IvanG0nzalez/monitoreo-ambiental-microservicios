@@ -10,6 +10,7 @@ var apiRouter = require('./routes/api');
 const models = require('./app/models');
 const rabbitmqHandler = require('./app/rabbitmqHandler');
 const { connect, consumeMessage } = require('./app/rabbitmq');
+const cors = require('cors');
 
 const CuentaC = require('./app/controllers/CuentaController');
 let cuentaControl = new CuentaC();
@@ -24,6 +25,8 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
+app.use(cors());
+app.options('*', cors());
 
 app.use('/', indexRouter);
 app.use('/api', apiRouter);

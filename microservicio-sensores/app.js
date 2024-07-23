@@ -23,22 +23,24 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use('/', indexRouter);
 app.use('/api', apiRouter);
 
-models.sequelize.sync().then(() =>{
+models.sequelize.sync().then(() => {
   console.log('\x1b[33m%s\x1b[0m', "Se sincronizaron los modelos");
 }).catch(err => {
-  console.log(err,"ERROR!");
+  console.log(err, "ERROR!");
 });
 
-app.use(function(req, res, next) {
+app.use(function (req, res, next) {
   next(createError(404));
 });
 
-app.use(function(err, req, res, next) {
+app.use(function (err, req, res, next) {
   res.locals.message = err.message;
   res.locals.error = req.app.get('env') === 'development' ? err : {};
 
   res.status(err.status || 500);
   res.render('error');
 });
+
+
 
 module.exports = app;
