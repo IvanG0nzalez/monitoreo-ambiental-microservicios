@@ -5,6 +5,8 @@ var registros = models.registro_climatico;
 const connectionStringRegex = /^Endpoint=sb:\/\/.*\.servicebus\.windows\.net\/;SharedAccessKeyName=.*;SharedAccessKey=.*;EntityPath=.*$/;
 const { EventHubConsumerClient } = require("@azure/event-hubs");
 const { v4: uuidv4 } = require('uuid');
+
+const moment = require('moment-timezone');
 class SensorControl {
 
     constructor() {
@@ -161,6 +163,7 @@ class SensorControl {
         const subscription = client.subscribe({
             processEvents: async (events, context) => {
                 for (const event of events) {
+                    // Asegúrate de que la verificación de eventos sea correcta para cada sensor
                     if (event.systemProperties["iothub-connection-device-id"] === sensorData.alias) {
                         console.log(`Mensaje recibido para ${sensorData.alias}: ${JSON.stringify(event.body)}`);
                         const datos = event.body;
@@ -197,11 +200,9 @@ class SensorControl {
 
         if (valorMedido !== undefined && valorMedido !== null) {
             try {
-                // Primero, obtenemos el id del sensor
                 const sensorEncontrado = await sensor.findOne({
                     where: {
-                        alias: sensorData.alias,
-                        tipo_medicion: sensorData.tipo_medicion
+                        external_id: sensorData.external_id
                     }
                 });
 
@@ -210,11 +211,15 @@ class SensorControl {
                     return;
                 }
 
+                const fechaHoraEcuador = moment().tz('America/Guayaquil');
+                const fecha_actual = fechaHoraEcuador.format('YYYY-MM-DD');
+                const hora_actual = fechaHoraEcuador.format('HH:mm:ss');
+
                 await registros.create({
-                    fecha: new Date().toISOString().split('T')[0],
-                    hora: new Date().toTimeString().split(' ')[0],
+                    fecha: fecha_actual,
+                    hora: hora_actual,
                     valor_medido: valorMedido,
-                    id_sensor: sensorEncontrado.id,  // Usamos el id del sensor encontrado
+                    id_sensor: sensorEncontrado.id,
                     external_id: uuidv4()
                 });
                 console.log(`Registro guardado para ${sensorData.alias} - ${sensorData.tipo_medicion}: ${valorMedido}`);
@@ -225,7 +230,6 @@ class SensorControl {
             console.log(`Valor nulo o indefinido para ${sensorData.alias} - ${sensorData.tipo_medicion}, no se guarda.`);
         }
     }
-
 
 
     async iniciarMonitoreoTodosSensores(req, res) {
