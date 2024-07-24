@@ -61,38 +61,59 @@ class RegistroControl {
         }
     }
 
-    async guardar_manual(req, res) {
-        if (req.body.hasOwnProperty('valor_medido') &&
-            req.body.hasOwnProperty('sensor')) {
+    async guardar(sensorData, datos) {
+        let valor_medido;
+
+        switch (sensorData.tipo_medicion) {
+            case 'Temperatura':
+                valor_medido = datos.Temperatura;
+                break;
+            case 'Humedad':
+                valor_medido = datos.Humedad;
+                break;
+            case 'CO2':
+                valor_medido = datos.CO2;
+                break;
+            default:
+                console.log(`Tipo de medición no reconocido: ${sensorData.tipo_medicion}`);
+                return;
+        }
+
+        if (valor_medido !== undefined && valor_medido !== null) {
             var uuid = require("uuid");
             try {
-                var sensorAux = await sensor.findOne({ where: { external_id: req.body.sensor } });
+                const sensorAux = await sensor.findOne({
+                    where: {
+                        alias: sensorData.alias,
+                        tipo_medicion: sensorData.tipo_medicion
+                    }
+                });
 
-                var fecha_actual = fecha_hora_local.toISOString().slice(0, 10);
-                var hora_actual = fecha_hora_local.toTimeString().slice(0, 8);
+                if (!sensorAux) {
+                    console.log(`Sensor no encontrado para ${sensorData.alias} - ${sensorData.tipo_medicion}`);
+                    return;
+                }
 
-                var data = {
+                const fecha_actual = fecha_hora_local.toISOString().slice(0, 10);
+                const hora_actual = fecha_hora_local.toTimeString().slice(0, 8);
+
+                const data = {
                     fecha: fecha_actual,
                     hora: hora_actual,
-                    valor_medido: req.body.valor_medido,
+                    valor_medido: valor_medido,
                     id_sensor: sensorAux.id,
                     external_id: uuid.v4(),
                 }
-                var result = await registros.create(data);
-                if (result === null) {
-                    res.status(401);
-                    res.json({ msg: "Error", tag: "No se guardó el registro climático", code: 401 });
-                } else {
-                    res.status(200);
-                    res.json({ msg: "OK", tag: "Registro climático guardado", code: 200 });
-                }
+
+                await registros.create(data);
+
+                console.log(`Registro guardado para ${sensorData.alias} - ${sensorData.tipo_medicion}: ${valor_medido}`);
+
             } catch (error) {
-                res.status(404);
-                res.json({ msg: "Error", tag: "El sensor no existe", code: 404 });
+                console.error(`Error al guardar registro manual: ${error.message}`);
             }
         } else {
-            res.status(400);
-            res.json({ msg: "Error", tag: "Faltan datos", code: 400 });
+            console.log(`Valor nulo o indefinido para ${sensorData.alias} - ${sensorData.tipo_medicion}, no se guarda.`);
         }
     }
 }

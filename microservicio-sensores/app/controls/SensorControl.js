@@ -167,7 +167,7 @@ class SensorControl {
                     if (event.systemProperties["iothub-connection-device-id"] === sensorData.alias) {
                         console.log(`Mensaje recibido para ${sensorData.alias}: ${JSON.stringify(event.body)}`);
                         const datos = event.body;
-                        await this.guardarRegistro(sensorData, datos);
+                        await registrosControl.guardar(sensorData, datos);
                     }
                 }
             },

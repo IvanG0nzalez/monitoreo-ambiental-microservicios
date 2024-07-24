@@ -83,17 +83,15 @@ class CuentaController {
             return await sendMessage('cuenta_creada', { success: false, msg: 'Error al crear la cuenta' });
         }
     }
-
-    async actualizar(req, res) {
-        const id_usuario = req.params.id_usuario;
-        const { correo, nombre_usuario, clave } = req.body;
-
-        if (!correo && !nombre_usuario && !clave) {
+    async actualizar(message) {
+        const { correo, nombre_usuario, clave, id_usuario } = message;
+        console.log(message);
+        /*if (!correo && !nombre_usuario && !clave) {
             return res.status(400).json({ msg: 'Parámetros incorrectos', code: 400, datos: {} });
-        }
+        }*/
 
         const cuentaAux = await cuenta.findOne({ where: { id_usuario: id_usuario } });
-
+        console.log(cuentaAux);
         if (!cuentaAux) {
             return res.status(404).json({ msg: 'Cuenta no encontrada', code: 404, datos: {} });
         }
@@ -103,16 +101,44 @@ class CuentaController {
         if (nombre_usuario) camposActualizar.nombre_usuario = nombre_usuario;
         if (clave) camposActualizar.clave = await bcrypt.hash(clave, 10);
 
-        const cuenta_actualizada = await cuenta.update(camposActualizar, { where: { id_usuario: id_usuario } });
+        try {
+            const cuenta_actualizada = await cuenta.update(camposActualizar, { where: { id_usuario: id_usuario } });
+            if (!cuenta_actualizada) {
+                return await sendMessage('cuenta_actualizada', { success: false, msg: 'Error al actualizar la cuenta' });
 
-        if (!cuenta_actualizada) {
-            return res.status(500).json({ msg: 'Error al actualizar cuenta', code: 500, datos: {} });
+            }
+            return await sendMessage('cuenta_actualizada', { success: true, msg: 'Cuenta actualizada correctamente' });
+        } catch (error) {
+            return await sendMessage('cuenta_actualizada', { success: false, msg: 'Error al actualizar la cuenta' });
         }
 
-        return res.status(200).json({ msg: 'Cuenta actualizada', code: 200 });
     }
 
-    async eliminar(req, res) {
+    async eliminar(message) {
+        const id_usuario = message.id_usuario;
+
+        if (!id_usuario) {
+            return await sendMessage('cuenta_eliminada', { success: false, msg: 'Parámetros incorrectos' });
+        }
+
+        const cuentaAux = await cuenta.findOne({ where: { id_usuario: id_usuario } });
+
+        if (!cuentaAux) {
+            return await sendMessage('cuenta_eliminada', { success: false, msg: 'Cuenta no encontrada' });
+        }
+
+        const cuenta_eliminada = await cuenta.destroy({ where: { id_usuario: id_usuario } });
+
+        if (!cuenta_eliminada) {
+            return await sendMessage('cuenta_eliminada', { success: false, msg: 'Error al eliminar la cuenta' });
+        }else{
+            return await sendMessage('cuenta_eliminada', {success: true, msg: 'Cuenta eliminada correctamente'});
+        }
+
+        
+    }
+
+    /*async eliminar(req, res) {
         const id_usuario = req.params.id_usuario;
 
         if (!id_usuario) {
@@ -132,7 +158,7 @@ class CuentaController {
         }
 
         return res.status(200).json({ msg: 'Cuenta eliminada', code: 200, datos: cuenta_eliminada });
-    }
+    }*/
 
     async inicio_sesion(req, res) {
         const { correo, clave } = req.body;
@@ -168,6 +194,7 @@ class CuentaController {
         var data = {
             token: token,
             external: cuentaAux.external_id,
+            nombre_usuario: cuentaAux.nombre_usuario,
         };
 
         return res.status(200).json({ msg: 'Inicio de sesión correcto', code: 200, datos: data });

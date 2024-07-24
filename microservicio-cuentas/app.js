@@ -10,6 +10,7 @@ var apiRouter = require('./routes/api');
 const models = require('./app/models');
 const rabbitmqHandler = require('./app/rabbitmqHandler');
 const { connect, consumeMessage } = require('./app/rabbitmq');
+const cors = require('cors');
 
 const CuentaC = require('./app/controllers/CuentaController');
 let cuentaControl = new CuentaC();
@@ -24,6 +25,8 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
+app.use(cors());
+app.options('*', cors());
 
 app.use('/', indexRouter);
 app.use('/api', apiRouter);
@@ -34,6 +37,8 @@ models.sequelize.sync().then(async () =>{
   await connect();
 
   await consumeMessage('usuario_creado', cuentaControl.crear);
+  await consumeMessage('actualizar_cuenta', cuentaControl.actualizar);
+  await consumeMessage('eliminar_cuenta', cuentaControl.eliminar);
   //await consumeMessage('obtener_cuentas', cuentaControl.listar_rabbit);
 }).catch(err => {
   console.log(err,"ERROR!");
