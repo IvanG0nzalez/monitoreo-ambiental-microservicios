@@ -2,6 +2,7 @@
 var models = require('../models');
 var sensor = models.sensor;
 var registros = models.registro_climatico;
+
 const connectionStringRegex = /^Endpoint=sb:\/\/.*\.servicebus\.windows\.net\/;SharedAccessKeyName=.*;SharedAccessKey=.*;EntityPath=.*$/;
 const { EventHubConsumerClient } = require("@azure/event-hubs");
 const { v4: uuidv4 } = require('uuid');
@@ -163,11 +164,10 @@ class SensorControl {
         const subscription = client.subscribe({
             processEvents: async (events, context) => {
                 for (const event of events) {
-                    // Asegúrate de que la verificación de eventos sea correcta para cada sensor
                     if (event.systemProperties["iothub-connection-device-id"] === sensorData.alias) {
                         console.log(`Mensaje recibido para ${sensorData.alias}: ${JSON.stringify(event.body)}`);
                         const datos = event.body;
-                        await registrosControl.guardar(sensorData, datos);
+                        await this.guardarRegistro(sensorData, datos);
                     }
                 }
             },
