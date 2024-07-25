@@ -37,7 +37,7 @@ const SalesOverview = () => {
             bar: {
                 horizontal: false,
                 barHeight: '60%',
-                columnWidth: '20%',
+                columnWidth: '40%',
                 borderRadius: [6],
                 borderRadiusApplication: 'end',
                 borderRadiusWhenStacked: 'all',
@@ -68,7 +68,7 @@ const SalesOverview = () => {
             tickAmount: 4,
         },
         xaxis: {
-            categories: ['16/08', '17/08', '18/08', '19/08', '20/08', '21/08', '22/08', '23/08'],
+            categories: ['16/08', '17/08', '18/08', '19/08', '20/08', '21/08', '22/08', '23/08', "24/08"],
             axisBorder: {
                 show: false,
             },
@@ -84,19 +84,19 @@ const SalesOverview = () => {
         CO2: [
             {
                 name: 'CO2',
-                data: [355, 390, 300, 350, 390, 180, 355, 390],
+                data: [355, 390, 300, 350, 390, 180, 355, 390, 300],
             },
         ],
         Temperatura: [
             {
                 name: 'Temperatura',
-                data: [280, 250, 325, 215, 250, 310, 280, 250],
+                data: [280, 250, 325, 215, 250, 310, 280, 250, 240],
             },
         ],
         Humedad: [
             {
                 name: 'Humedad',
-                data: [180, 150, 225, 115, 150, 210, 180, 150],
+                data: [180, 150, 225, 115, 150, 210, 180, 150, 120],
             },
         ],
     };

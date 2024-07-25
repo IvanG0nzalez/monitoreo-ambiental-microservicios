@@ -13,6 +13,7 @@ import { yupResolver } from "@hookform/resolvers/yup";
 import { loginSchema } from "@/hooks/ValidationSchemas";
 import { api_cuentas } from "@/hooks/Api";
 import { useSnackbar } from "notistack";
+import { useRouter } from "next/navigation";
 
 import CustomTextField from "@/app/(DashboardLayout)/components/forms/theme-elements/CustomTextField";
 
@@ -32,16 +33,18 @@ const AuthLogin = ({ title, subtitle, subtext }: loginType) => {
   });
 
   const { enqueueSnackbar } = useSnackbar();
+  const router = useRouter();
 
   const onSubmit = async (data: any) => {
     try {
       const response = await api_cuentas.inicio_sesion(data);
       console.log(response);
       
-      if (response.status === 200) {
+      if (response.data.code === 200) {
         enqueueSnackbar("Inicio de sesión exitoso", { variant: "success" });
+        router.push("/inicio");
       } else {
-        enqueueSnackbar("Error al iniciar sesión", { variant: "error" });
+        enqueueSnackbar(`${response.data.msg}`, { variant: "error" });
       }
     } catch (error) {
       enqueueSnackbar("Error al iniciar sesión", { variant: "error" });

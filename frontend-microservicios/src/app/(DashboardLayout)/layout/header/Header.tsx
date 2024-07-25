@@ -14,6 +14,8 @@ import Link from "next/link";
 // components
 import Profile from "./Profile";
 import { IconBellRinging, IconMenu } from "@tabler/icons-react";
+import { borrarSesion } from "@/hooks/SessionUtils";
+import { useRouter } from "next/navigation";
 
 interface ItemType {
   toggleMobileSidebar: (event: React.MouseEvent<HTMLElement>) => void;
@@ -22,6 +24,7 @@ interface ItemType {
 const Header = ({ toggleMobileSidebar }: ItemType) => {
   // const lgUp = useMediaQuery((theme) => theme.breakpoints.up('lg'));
   // const lgDown = useMediaQuery((theme) => theme.breakpoints.down('lg'));
+  const router = useRouter();
 
   const AppBarStyled = styled(AppBar)(({ theme }) => ({
     boxShadow: "none",
@@ -36,6 +39,11 @@ const Header = ({ toggleMobileSidebar }: ItemType) => {
     width: "100%",
     color: theme.palette.text.secondary,
   }));
+
+  const handleLogout = () => {
+    borrarSesion();
+    router.push("/");
+  };
 
   return (
     <AppBarStyled position="sticky" color="default">
@@ -68,16 +76,14 @@ const Header = ({ toggleMobileSidebar }: ItemType) => {
 
         <Box flexGrow={1} />
         <Stack spacing={1} direction="row" alignItems="center">
-          {/* <Button
+          <Button
             variant="contained"
-            component={Link}
-            href="/authentication/login"
             disableElevation
             color="primary"
+            onClick={handleLogout}
           >
-            Iniciar Sesión
-          </Button> */}
-          <Profile />
+            Cerrar Sesión
+          </Button>
         </Stack>
       </ToolbarStyled>
     </AppBarStyled>

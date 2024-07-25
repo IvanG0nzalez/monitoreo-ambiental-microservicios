@@ -1,6 +1,7 @@
 "use client";
 import Link from "next/link";
 import { Grid, Box, Card, Stack, Typography } from "@mui/material";
+import { SnackbarProvider } from "notistack";
 // components
 import PageContainer from "@/app/(DashboardLayout)/components/container/PageContainer";
 import Logo from "@/app/(DashboardLayout)/layout/shared/logo/Logo";
@@ -8,6 +9,7 @@ import AuthLogin from "@/app/authentication/auth/AuthLogin";
 
 const Login2 = () => {
   return (
+
     <PageContainer title="Login" description="this is Login page">
       <Box
         sx={{
@@ -57,33 +59,6 @@ const Login2 = () => {
                   >
                     Tu aplicación de monitoreo favorita
                   </Typography>
-                }
-                subtitle={
-                  <Stack
-                    direction="row"
-                    spacing={1}
-                    justifyContent="center"
-                    mt={3}
-                  >
-                    <Typography
-                      color="textSecondary"
-                      variant="h6"
-                      fontWeight="500"
-                    >
-                      ¿Nuevo por aquí?
-                    </Typography>
-                    <Typography
-                      component={Link}
-                      href="/authentication/register"
-                      fontWeight="500"
-                      sx={{
-                        textDecoration: "none",
-                        color: "primary.main",
-                      }}
-                    >
-                      Crear una cuenta
-                    </Typography>
-                  </Stack>
                 }
               />
             </Card>

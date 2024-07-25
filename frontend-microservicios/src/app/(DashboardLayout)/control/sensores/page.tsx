@@ -24,68 +24,73 @@ import ThermostatIcon from "@mui/icons-material/Thermostat";
 import OpacityIcon from "@mui/icons-material/Opacity";
 import LocalFireDepartmentIcon from "@mui/icons-material/LocalFireDepartment";
 import AirIcon from "@mui/icons-material/Air";
-import Chatbot from "@/app/chatbot/chatbot";
+import { useRouter } from "next/navigation";
+import { useEffect } from "react";
+import { getToken } from "@/hooks/SessionUtils";
+import DashboardCard from "../../components/shared/DashboardCard";
+import { api_sensores } from "@/hooks/Api";
+import { useSnackbar } from "notistack";
+
+interface Sensor {
+  alias: string;
+  tipo_medicion: string;
+  cadena_conexion: string;
+  external_id: string;
+}
 
 const SensorDisplayPage = () => {
-  const [sensors, setSensors] = useState([
-    {
-      id: 1,
-      name: "Sensor 1",
-      type: "CO2",
-      ip: "192.168.1.101",
-      estado: "Activo",
-    },
-    {
-      id: 2,
-      name: "Sensor 2",
-      type: "Temperatura",
-      ip: "192.168.1.102",
-      estado: "Activo",
-    },
-    {
-      id: 3,
-      name: "Sensor 3",
-      type: "Humedad",
-      ip: "192.168.1.103",
-      estado: "Activo",
-    },
-  ]);
+  const router = useRouter();
+  const token = getToken();
+  const { enqueueSnackbar } = useSnackbar();
 
-  const [newSensor, setNewSensor] = useState({
-    name: "",
-    type: "",
-    ip: "",
-    estado: "Inactivo",
+  const [sensors, setSensors] = useState<Sensor[]>([]);
+
+  const [newSensor, setNewSensor] = useState<Sensor>({
+    alias: "",
+    tipo_medicion: "",
+    cadena_conexion: "",
+    external_id: "",
   });
 
-  const [editSensor, setEditSensor] = useState({
-    id: 0,
-    name: "",
-    type: "",
-    ip: "",
-    estado: "Inactivo",
+  const [editSensor, setEditSensor] = useState<Sensor>({
+    alias: "",
+    tipo_medicion: "",
+    cadena_conexion: "",
+    external_id: "",
   });
 
-  const [open, setOpen] = useState(false);
+  const [createOpen, setCreateOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [sensorToDelete, setSensorToDelete] = useState<string | null>(null);
 
-  const handleOpen = () => {
-    setOpen(true);
+  useEffect(() => {
+    if (!token) {
+      router.push("/");
+    }
+  }, []);
+
+  useEffect(() => {
+    const fetchSensors = async () => {
+      const response = await api_sensores.listar(token);
+      if (response.data.code !== 200) {
+        enqueueSnackbar(response.data.msg, { variant: "error" });
+        return;
+      }
+      setSensors(response.data.datos);
+    };
+    fetchSensors();
+  }, [token]);
+
+  const handleCreateOpen = () => {
+    setCreateOpen(true);
   };
 
-  const handleClose = () => {
-    setOpen(false);
+  const handleCreateClose = () => {
+    setCreateOpen(false);
   };
 
-  const handleEditOpen = (
-    sensor: SetStateAction<{
-      id: number;
-      name: string;
-      type: string;
-      ip: string;
-      estado: string;
-    }>
-  ) => {
+  const handleEditOpen = (sensor: Sensor) => {
     setEditSensor(sensor);
     setEditOpen(true);
   };
@@ -94,24 +99,52 @@ const SensorDisplayPage = () => {
     setEditOpen(false);
   };
 
-  const handleAddSensor = () => {
+  const handleDeleteOpen = (external_id: string) => {
+    setSensorToDelete(external_id);
+    setDeleteOpen(true);
+  };
+
+  const handleDeleteClose = () => {
+    setSensorToDelete(null);
+    setDeleteOpen(false);
+  };
+
+  const handleAddSensor = async () => {
+
+    const response = await api_sensores.crear(newSensor, token);
+
+    if (response.data.code !== 201) {
+      enqueueSnackbar(response.data.msg, { variant: "error" });
+      return;
+    }
+    enqueueSnackbar(response.data.msg, { variant: "success" });
+
     const sensorToAdd = {
-      id: sensors.length + 1,
       ...newSensor,
+      external_id: response.data.datos.external_id,
     };
     setSensors([...sensors, sensorToAdd]);
     setNewSensor({
-      name: "",
-      type: "",
-      ip: "",
-      estado: "Inactivo",
+      alias: "",
+      tipo_medicion: "",
+      cadena_conexion: "",
+      external_id: "",
     });
-    handleClose();
+    handleCreateClose();
   };
 
-  const handleEditSensor = () => {
+  const handleEditSensor = async () => {
+    const response = await api_sensores.actualizar(editSensor.external_id, editSensor, token);
+    
+    if (response.data.code !== 200) {
+      enqueueSnackbar(response.data.msg, { variant: "error" });
+      return;
+    }
+
+    enqueueSnackbar(response.data.msg, { variant: "success" });
+
     const updatedSensors = sensors.map((sensor) =>
-      sensor.id === editSensor.id ? editSensor : sensor
+      sensor.external_id === editSensor.external_id ? editSensor : sensor
     );
     setSensors(updatedSensors);
     handleEditClose();
@@ -133,13 +166,26 @@ const SensorDisplayPage = () => {
     }));
   };
 
-  const handleDeleteSensor = (id: number) => {
-    const updatedSensors = sensors.filter((sensor) => sensor.id !== id);
+  const handleDeleteSensor = async () => {
+    if (!sensorToDelete) return;
+
+    const response = await api_sensores.eliminar(sensorToDelete, token);
+
+    if (response.data.code !== 200) {
+      enqueueSnackbar(response.data.msg, { variant: "error" });
+      setDeleteOpen(false);
+      return;
+    }
+
+    enqueueSnackbar(response.data.msg, { variant: "success" });
+
+    const updatedSensors = sensors.filter((sensor) => sensor.external_id !== sensorToDelete);
     setSensors(updatedSensors);
+    setDeleteOpen(false);
   };
 
-  const getSensorIcon = (type: string) => {
-    switch (type) {
+  const getSensorIcon = (tipo_medicion: string) => {
+    switch (tipo_medicion) {
       case "CO2":
         return <AirIcon fontSize="large" />;
       case "Temperatura":
@@ -153,66 +199,67 @@ const SensorDisplayPage = () => {
 
   return (
     <PageContainer title="Sensor" description="Vista de Sensores">
-      <Grid container spacing={3}>
-        <Grid item xs={12}>
-          <Button
-            variant="contained"
-            startIcon={<AddIcon />}
-            onClick={handleOpen}
-          >
-            Agregar Sensor
-          </Button>
-        </Grid>
-        {sensors.map((sensor) => (
-          <Grid item key={sensor.id} xs={12} sm={6} md={4} lg={3}>
-            <BlankCard>
-              <Box display="flex" justifyContent="space-between">
-                <CardContent>
-                  <Typography variant="h6">{sensor.name}</Typography>
-                  <Typography variant="body1" color="textSecondary">
-                    Tipo: {sensor.type}
-                  </Typography>
-                  <Typography variant="body1" color="textSecondary">
-                    IP: {sensor.ip}
-                  </Typography>
-                  <Typography variant="body1" color="textSecondary">
-                    Estado: {sensor.estado}
-                  </Typography>
-                  <Button
-                    variant="outlined"
-                    startIcon={<EditIcon />}
+      <DashboardCard title="Sensores">
+        <Grid container spacing={3} justifyContent="center">
+          <Grid item xs={12}>
+            <Button
+              variant="contained"
+              startIcon={<AddIcon />}
+              onClick={handleCreateOpen}
+            >
+              Agregar Sensor
+            </Button>
+          </Grid>
+          {sensors.map((sensor) => (
+            <Grid item key={sensor.external_id} xs={12} sm={6} md={4} lg={3}>
+              <BlankCard>
+                <Box display="flex" justifyContent="space-between" alignItems="center">
+                  <CardContent>
+                    <Typography variant="h6">{sensor.alias}</Typography>
+
+                    <Typography variant="body1" color="textSecondary">
+                      Tipo: {sensor.tipo_medicion}
+                    </Typography>
+                  </CardContent>
+
+                  <Box alignSelf="flex-start">{getSensorIcon(sensor.tipo_medicion)}</Box>
+                </Box>
+
+                <Box display="flex" alignItems="right" alignContent="end" justifyContent="end">
+                  <IconButton
+                    color="warning"
                     onClick={() => handleEditOpen(sensor)}
                   >
-                    Editar
-                  </Button>
+                    <EditIcon />
+                  </IconButton>
+
                   <IconButton
                     color="error"
-                    onClick={() => handleDeleteSensor(sensor.id)}
+                    onClick={() => handleDeleteOpen(sensor.external_id)}
                   >
                     <DeleteIcon />
                   </IconButton>
-                </CardContent>
-                <Box alignSelf="flex-start">{getSensorIcon(sensor.type)}</Box>
-              </Box>
-            </BlankCard>
-          </Grid>
-        ))}
-      </Grid>
+                </Box>
+              </BlankCard>
+            </Grid>
+          ))}
+        </Grid>
+      </DashboardCard>
 
-      <Dialog open={open} onClose={handleClose}>
+      <Dialog open={createOpen} onClose={handleCreateClose}>
         <DialogTitle>Agregar Nuevo Sensor</DialogTitle>
         <DialogContent>
           <TextField
-            name="name"
-            label="Nombre"
-            value={newSensor.name}
+            name="alias"
+            label="Alias"
+            value={newSensor.alias}
             onChange={handleChange}
             fullWidth
             margin="normal"
           />
           <Select
-            name="type"
-            value={newSensor.type}
+            name="tipo_medicion"
+            value={newSensor.tipo_medicion}
             onChange={handleChange}
             fullWidth
             displayEmpty
@@ -225,26 +272,16 @@ const SensorDisplayPage = () => {
             <MenuItem value="Humedad">Humedad</MenuItem>
           </Select>
           <TextField
-            name="ip"
-            label="IP"
-            value={newSensor.ip}
+            name="cadena_conexion"
+            label="Cadena de conexión"
+            value={newSensor.cadena_conexion}
             onChange={handleChange}
             fullWidth
             margin="normal"
           />
-          <Select
-            name="estado"
-            value={newSensor.estado}
-            onChange={handleChange}
-            fullWidth
-            displayEmpty
-          >
-            <MenuItem value="Activo">Activo</MenuItem>
-            <MenuItem value="Inactivo">Inactivo</MenuItem>
-          </Select>
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleClose} color="primary">
+          <Button onClick={handleCreateClose} color="primary">
             Cancelar
           </Button>
           <Button onClick={handleAddSensor} color="primary" variant="contained">
@@ -259,14 +296,14 @@ const SensorDisplayPage = () => {
           <TextField
             name="name"
             label="Nombre"
-            value={editSensor.name}
+            value={editSensor.alias}
             onChange={handleEditChange}
             fullWidth
             margin="normal"
           />
           <Select
-            name="type"
-            value={editSensor.type}
+            name="tipo_medicion"
+            value={editSensor.tipo_medicion}
             onChange={handleEditChange}
             fullWidth
             displayEmpty
@@ -279,23 +316,13 @@ const SensorDisplayPage = () => {
             <MenuItem value="Humedad">Humedad</MenuItem>
           </Select>
           <TextField
-            name="ip"
-            label="IP"
-            value={editSensor.ip}
+            name="cadena_conexion"
+            label="cadena_conexion"
+            value={editSensor.cadena_conexion}
             onChange={handleEditChange}
             fullWidth
             margin="normal"
           />
-          <Select
-            name="estado"
-            value={editSensor.estado}
-            onChange={handleEditChange}
-            fullWidth
-            displayEmpty
-          >
-            <MenuItem value="Activo">Activo</MenuItem>
-            <MenuItem value="Inactivo">Inactivo</MenuItem>
-          </Select>
         </DialogContent>
         <DialogActions>
           <Button onClick={handleEditClose} color="primary">
@@ -310,7 +337,21 @@ const SensorDisplayPage = () => {
           </Button>
         </DialogActions>
       </Dialog>
-      <Chatbot />
+
+      <Dialog open={deleteOpen} onClose={handleDeleteClose}>
+        <DialogTitle>Confirmar Eliminación</DialogTitle>
+        <DialogContent>
+          <Typography>¿Estás seguro de que quieres eliminar este sensor?</Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleDeleteClose} color="primary">
+            Cancelar
+          </Button>
+          <Button onClick={handleDeleteSensor} color="error" variant="contained">
+            Eliminar
+          </Button>
+        </DialogActions>
+      </Dialog>
     </PageContainer>
   );
 };
