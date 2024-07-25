@@ -1,8 +1,8 @@
 var express = require('express');
 var router = express.Router();
-const sensorC = require('../app/controls/SensorControl');
+const sensorC = require('../app/controllers/SensorControl');
 let sensorControl = new sensorC();
-const registrosC = require('../app/controls/RegistroControl');
+const registrosC = require('../app/controllers/RegistroControl');
 let registrosControl = new registrosC();
 const auth = require('../middlewares/authMiddleware');
 
@@ -11,14 +11,15 @@ const auth = require('../middlewares/authMiddleware');
 router.get('/sensores/ultimo_registro', sensorControl.ultimo_registro);
 router.get('/sensores', auth, sensorControl.listar);
 router.get('/sensores/:external', auth, sensorControl.obtener_sensor);
-router.post('/sensores/guardar', auth, sensorControl.guardar);
+router.post('/sensores/crear', auth, sensorControl.crear);
 router.get('/sensores/registros/:external', auth, sensorControl.obtener_registros_climaticos);
-router.patch('/sensores/:external', auth, sensorControl.modificar);
-
+router.patch('/sensores/actualizar/:external', sensorControl.actualizar);
+router.get('/sensores/ultimo_registro', sensorControl.ultimo_registro);
+router.delete('/sensores/eliminar/:external', auth, sensorControl.eliminar);
 
 //API monitoreo
-router.post('/iniciar-monitoreo', sensorControl.iniciarMonitoreoTodosSensores.bind(sensorControl));
-router.post('/detener-monitoreo', (req, res) => sensorControl.detenerMonitoreo(req, res));
+router.post('/sensores/iniciar-monitoreo', auth, sensorControl.iniciarMonitoreoTodosSensores.bind(sensorControl));
+router.post('/sensores/detener-monitoreo', auth, (req, res) => sensorControl.detenerMonitoreo(req, res));
 
 //API registros
 router.get('/registros/listar/hoy', registrosControl.listar_hoy);

@@ -18,8 +18,7 @@ class SensorControl {
         var lista = await sensor.findAll({
             attributes: ['alias', 'cadena_conexion', 'tipo_medicion', 'external_id'],
         });
-        res.status(200);
-        res.json({ msg: "OK", code: 200, datos: lista });
+        return res.status(200).json({ msg: "OK", code: 200, datos: lista });
     }
 
     async obtener_sensor(req, res) {
@@ -85,13 +84,12 @@ class SensorControl {
         res.json({ msg: "OK", code: 200, datos: lista });
     }
 
-    async guardar(req, res) {
+    async crear(req, res) {
         if (req.body.hasOwnProperty('alias') &&
             req.body.hasOwnProperty('cadena_conexion') &&
             req.body.hasOwnProperty('tipo_medicion')) {
             if (!connectionStringRegex.test(req.body.cadena_conexion)) {
-                res.status(400);
-                res.json({ msg: "Error", tag: "La cadena de conexión no es válida", code: 400 });
+                return res.status(202).json({ msg: "La cadena de conexión no es válida", code: 400 });
             } else {
                 var uuid = require('uuid');
                 var data = {
@@ -103,29 +101,32 @@ class SensorControl {
 
                 var result = await sensor.create(data);
                 if (result === null) {
-                    res.status(401);
-                    res.json({ msg: "Error", tag: "No se guardó el sensor", code: 401 });
+                    return res.status(202).json({ msg: "Error al crear el sensor", code: 401 });
                 } else {
-                    res.status(200);
-                    res.json({ msg: "OK", tag: "Sensor guardado", code: 200 });
+                    const datos = {
+                        alias: result.alias,
+                        cadena_conexion: result.cadena_conexion,
+                        tipo_medicion: result.tipo_medicion,
+                        external_id: result.external_id
+                    };
+                    return res.status(201).json({ msg: "Sensor creado correctamente", code: 201, datos });
                 }
             }
         } else {
-            res.status(400);
-            res.json({ msg: "Error", tag: "Faltan datos", code: 400 });
+            return res.status(202).json({ msg: "Faltan datos", code: 400 });
         }
     }
 
-    async modificar(req, res) {
+    async actualizar(req, res) {
         const external = req.params.external;
         try {
             var sensors = await sensor.findOne({ where: { external_id: external } });
             var tipo_medicion = req.body.tipo_medicion;
             if (tipo_medicion && tipo_medicion != "Temperatura" && tipo_medicion != "Humedad" && tipo_medicion != "CO2") {
-                return res.status(400).json({ msg: "Error", tag: "Los tipos disponibles son Temperatura, Humedad y CO2", code: 400 });
+                return res.status(202).json({ msg: "Los tipos disponibles son Temperatura, Humedad y CO2", code: 400 });
             }
             if (req.body.cadena_conexion && !connectionStringRegex.test(req.body.cadena_conexion)) {
-                return res.status(400).json({ msg: "Error", tag: "La cadena de conexión no es válida", code: 400 });
+                return res.status(202).json({ msg: "La cadena de conexión no es válida", code: 400 });
             }
             try {
                 const data = {
@@ -134,14 +135,40 @@ class SensorControl {
                     tipo_medicion: req.body.tipo_medicion !== undefined ? req.body.tipo_medicion : sensor.tipo_medicion,
                 };
                 await sensors.update(data);
-                res.status(200);
-                res.json({ msg: "OK", tag: "Sensor modificado", code: 200 })
+                return res.status(200).json({ msg: "Sensor modificado", code: 200 })
             } catch (error) {
-                return res.status(500).json({ msg: "Error", tag: "Error interno", code: 500 });
+                return res.status(202).json({ msg: "Error interno", code: 500 });
             }
         } catch (error) {
-            res.status(404);
-            res.json({ msg: "Error", tag: "Ese sensor no existe", code: 404 });
+            return res.status(202).json({ msg: "Ese sensor no existe", code: 404 });
+        }
+    }
+
+    async eliminar(req, res) {
+        const { external } = req.params;
+
+        if (!external) {
+            return res.status(202).json({ msg: 'Parámetros incorrectos', code: 400, datos: {} });
+        }
+
+        const transaction = await models.sequelize.transaction();
+
+        try {
+            const sensorAux = await sensor.findOne({ where: { external_id: external }, transaction });
+
+            if (!sensorAux) {
+                return res.status(202).json({ msg: 'El sensor no existe', code: 404, datos: {} });
+            }
+
+            await registros.destroy({ where: { id_sensor: sensorAux.id }, transaction });
+
+            await sensorAux.destroy({ transaction });
+
+            await transaction.commit();
+            return res.status(200).json({ msg: "Sensor eliminado correctamente", code: 200 });
+        } catch (error) {
+            await transaction.rollback();
+            return res.status(202).json({ msg: "Error al eliminar el sensor", code: 404 });
         }
     }
 
