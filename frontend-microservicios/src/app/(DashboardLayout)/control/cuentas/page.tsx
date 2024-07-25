@@ -23,72 +23,140 @@ import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import DashboardCard from "@/app/(DashboardLayout)/components/shared/DashboardCard";
 import PageContainer from "../../components/container/PageContainer";
-import Chatbot from "@/app/chatbot/chatbot";
+import { useRouter } from "next/navigation";
+import { useEffect } from "react";
+import { getToken } from "@/hooks/SessionUtils";
+import { useSnackbar } from "notistack";
+import { api_cuentas, api_roles, api_usuarios } from "@/hooks/Api";
+
+interface User {
+  id?: Number,
+  cedula: string,
+  nombres: string,
+  apellidos: string,
+  external_id: string,
+  rol?: any,
+  external_rol: any,
+  correo?: string,
+  nombre_usuario?: string,
+  clave?: string,
+}
+
+interface Cuenta {
+  id_usuario: string,
+  correo: string,
+  nombre_usuario: string,
+  clave: string,
+}
+
+interface Rol {
+  nombre: string,
+  external_id: string,
+}
 
 const UserAccounts = () => {
-  // Datos de ejemplo para las cuentas de usuario
-  const [users, setUsers] = useState([
-    {
-      id: 1,
-      nombre: "Tupu",
-      apellidos: "Tamadre",
-      correo: "example@gmail.comxd",
-      identificacion: "1105966360",
-      rol: "Administrador",
-      clave: "password1",
-    },
-    {
-      id: 2,
-      nombre: "Yapapito",
-      apellidos: "Descana",
-      correo: "example@gmail.comxd",
-      identificacion: "1105966360",
-      rol: "Usuario",
-      clave: "password2",
-    },
-  ]);
+  const router = useRouter();
+  const token = getToken();
+  const { enqueueSnackbar } = useSnackbar();
 
-  const [newUser, setNewUser] = useState({
-    nombre: "",
-    apellidos: "",
+  const [users, setUsers] = useState<User[]>([]);
+  const [roles, setRoles] = useState<Rol[]>([]);
+
+  const [newUser, setNewUser] = useState<User>({
     correo: "",
-    identificacion: "",
-    rol: "",
+    nombre_usuario: "",
     clave: "",
+    cedula: "",
+    nombres: "",
+    apellidos: "",
+    external_id: "",
+    external_rol: "",
+    rol: "",
   });
 
-  const [editUser, setEditUser] = useState({
-    id: 0,
-    nombre: "",
-    apellidos: "",
+  const [editUser, setEditUser] = useState<User>({
     correo: "",
-    identificacion: "",
-    rol: "",
+    nombre_usuario: "",
     clave: "",
+    cedula: "",
+    nombres: "",
+    apellidos: "",
+    external_id: "",
+    external_rol: "",
   });
 
-  const [open, setOpen] = useState(false);
+  const [createOpen, setCreateOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [userToDelete, setUserToDelete] = useState<string | null>(null);
 
-  const handleOpen = () => {
-    setOpen(true);
+  useEffect(() => {
+    if (!token) {
+      router.push("/");
+    }
+  }, []);
+
+  useEffect(() => {
+    const fetchUsersAndRoles = async () => {
+      try {
+        const response_usuarios = await api_usuarios.listar(token);
+        const response_cuentas = await api_cuentas.listar(token);
+        const response_roles = await api_roles.listar(token);
+
+        if (response_usuarios.data.code !== 200) {
+          enqueueSnackbar(response_usuarios.data.msg, { variant: "error" });
+          return;
+        }
+
+        if (response_cuentas.data.code !== 200) {
+          enqueueSnackbar(response_cuentas.data.msg, { variant: "error" });
+          return;
+        }
+  
+        if (response_roles.data.code !== 200) {
+          enqueueSnackbar(response_roles.data.msg, { variant: "error" });
+          return;
+        }
+
+        const cuentasMap = new Map(
+          response_cuentas.data.datos.map((cuenta: Cuenta) => [cuenta.id_usuario, cuenta])
+        );
+
+        const combinedUsers = response_usuarios.data.datos.map((user: User) => {
+          const cuenta = cuentasMap.get(user.id) as Cuenta;
+          return {
+            correo: cuenta ? cuenta.correo : '',
+            nombre_usuario: cuenta ? cuenta.nombre_usuario : '',
+            clave: cuenta ? cuenta.clave : '',
+            cedula: user.cedula,
+            nombres: user.nombres,
+            apellidos: user.apellidos,
+            external_id: user.external_id,
+            rol: user.rol.nombre,
+            external_rol: user.rol.external_id,
+          }
+        });
+        console.log(combinedUsers, "combinedUsers");
+        
+        setUsers(combinedUsers);
+        setRoles(response_roles.data.datos);
+
+      } catch (error) {
+        enqueueSnackbar("Hubo un error inesperado.", { variant: "error" });
+      }
+    };
+    fetchUsersAndRoles();
+  }, [token]);
+
+  const handleCreateOpen = () => {
+    setCreateOpen(true);
   };
 
-  const handleClose = () => {
-    setOpen(false);
+  const handleCreateClose = () => {
+    setCreateOpen(false);
   };
 
-  const handleEditOpen = (
-    user: SetStateAction<{
-      id: number;
-      nombre: string;
-      apellidos: string;
-      correo: string;
-      identificacion: string;
-      rol: string;
-      clave: string;
-    }>
-  ) => {
+  const handleEditOpen = (user: User) => {
     setEditUser(user);
     setEditOpen(true);
   };
@@ -97,26 +165,61 @@ const UserAccounts = () => {
     setEditOpen(false);
   };
 
-  const handleAddUser = () => {
+  const handleDeleteOpen = (external_id: string) => {
+    setUserToDelete(external_id);
+    setDeleteOpen(true);
+  };
+
+  const handleDeleteClose = () => {
+    setUserToDelete(null);
+    setDeleteOpen(false);
+  };
+
+  const handleAddUser = async () => {
+    console.log("newUser", newUser);
+    
+    const response = await api_usuarios.crear(newUser, token);
+
+    if (response.data.code !== 201) {
+      enqueueSnackbar(response.data.msg, { variant: "error" });
+      return;
+    }
+
+    enqueueSnackbar(response.data.msg, { variant: "success" });
+
     const userToAdd = {
-      id: users.length + 1,
       ...newUser,
+      external_id: response.data.datos.external_id,
     };
     setUsers([...users, userToAdd]);
     setNewUser({
-      nombre: "",
-      apellidos: "",
       correo: "",
-      identificacion: "",
-      rol: "",
+      nombre_usuario: "",
       clave: "",
+      cedula: "",
+      nombres: "",
+      apellidos: "",
+      external_id: "",
+      external_rol: "",
+      rol: "",
     });
-    handleClose();
+    handleCreateClose();
   };
 
-  const handleEditUser = () => {
+  const handleEditUser = async () => {
+    console.log(editUser);
+
+    const response = await api_usuarios.actualizar(editUser.external_id, editUser, token);
+
+    if (response.data.code !== 200) {
+      enqueueSnackbar(response.data.msg, { variant: "error" });
+      return;
+    }
+
+    enqueueSnackbar(response.data.msg, { variant: "success" });
+
     const updatedUsers = users.map((user) =>
-      user.id === editUser.id ? editUser : user
+      user.external_id === editUser.external_id ? editUser : user
     );
     setUsers(updatedUsers);
     handleEditClose();
@@ -124,9 +227,11 @@ const UserAccounts = () => {
 
   const handleChange = (e: { target: { name: any; value: any } }) => {
     const { name, value } = e.target;
+    
     setNewUser((prevUser) => ({
       ...prevUser,
       [name]: value,
+      rol: roles.find((rol) => rol.external_id === value)?.nombre || "",
     }));
   };
 
@@ -135,12 +240,25 @@ const UserAccounts = () => {
     setEditUser((prevUser) => ({
       ...prevUser,
       [name]: value,
+      rol: roles.find((rol) => rol.external_id === value)?.nombre || "",
     }));
   };
 
-  const handleDeleteUser = (id: number) => {
-    const updatedUsers = users.filter((user) => user.id !== id);
+  const handleDeleteUser = async () => {
+    if (!userToDelete) return;
+
+    const response = await api_usuarios.eliminar(userToDelete, token);
+
+    if (response.data.code !== 200) {
+      enqueueSnackbar(response.data.msg, { variant: "error" });
+      return;
+    }
+
+    enqueueSnackbar(response.data.msg, { variant: "success" });
+
+    const updatedUsers = users.filter((user) => user.external_id !== userToDelete);
     setUsers(updatedUsers);
+    setDeleteOpen(false);
   };
 
   return (
@@ -148,128 +266,124 @@ const UserAccounts = () => {
       title="Cuentas de Usuario"
       description="Vista de Cuenta de Usuario"
     >
-      <Box sx={{ overflow: "auto", width: { xs: "280px", sm: "auto" } }}>
-        <Button
-          variant="contained"
-          startIcon={<AddIcon />}
-          onClick={handleOpen}
-        >
-          Crear cuenta
-        </Button>
-        <Table aria-label="simple table" sx={{ whiteSpace: "nowrap", mt: 2 }}>
-          <TableHead>
-            <TableRow>
-              <TableCell>
-                <Typography variant="subtitle2" fontWeight={600}>
-                  ID
-                </Typography>
-              </TableCell>
-              <TableCell>
-                <Typography variant="subtitle2" fontWeight={600}>
-                  Nombre
-                </Typography>
-              </TableCell>
-              <TableCell>
-                <Typography variant="subtitle2" fontWeight={600}>
-                  Apellidos
-                </Typography>
-              </TableCell>
-              <TableCell>
-                <Typography variant="subtitle2" fontWeight={600}>
-                  Correo
-                </Typography>
-              </TableCell>
-              <TableCell>
-                <Typography variant="subtitle2" fontWeight={600}>
-                  Identificación
-                </Typography>
-              </TableCell>
-              <TableCell>
-                <Typography variant="subtitle2" fontWeight={600}>
-                  Rol
-                </Typography>
-              </TableCell>
-              <TableCell>
-                <Typography variant="subtitle2" fontWeight={600}>
-                  Opciones
-                </Typography>
-              </TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {users.map((user) => (
-              <TableRow key={user.id}>
+      <DashboardCard title="Cuentas de Usuario">
+        <Box sx={{ overflow: "auto", width: "100%" }}>
+          <Button
+            variant="contained"
+            startIcon={<AddIcon />}
+            onClick={handleCreateOpen}
+          >
+            Crear cuenta
+          </Button>
+          <Table aria-label="simple table" sx={{ whiteSpace: "nowrap", mt: 2 }}>
+            <TableHead>
+              <TableRow>
                 <TableCell>
-                  <Typography variant="body1" color="textSecondary">
-                    {user.id}
+                  <Typography variant="subtitle2" fontWeight={600}>
+                    Cedula
+                  </Typography>
+                </TableCell>
+
+                <TableCell>
+                  <Typography variant="subtitle2" fontWeight={600}>
+                    Correo
+                  </Typography>
+                </TableCell>
+
+                <TableCell>
+                  <Typography variant="subtitle2" fontWeight={600}>
+                    Nombres
+                  </Typography>
+                </TableCell>
+
+                <TableCell>
+                  <Typography variant="subtitle2" fontWeight={600}>
+                    Apellidos
+                  </Typography>
+                </TableCell>
+
+                <TableCell>
+                  <Typography variant="subtitle2" fontWeight={600}>
+                    Usuario
+                  </Typography>
+                </TableCell>
+
+                <TableCell>
+                  <Typography variant="subtitle2" fontWeight={600}>
+                    Rol
                   </Typography>
                 </TableCell>
                 <TableCell>
-                  <Typography variant="body1" color="textSecondary">
-                    {user.nombre}
+                  <Typography variant="subtitle2" fontWeight={600}>
+                    Opciones
                   </Typography>
-                </TableCell>
-                <TableCell>
-                  <Typography variant="body1" color="textSecondary">
-                    {user.apellidos}
-                  </Typography>
-                </TableCell>
-                <TableCell>
-                  <Typography variant="body1" color="textSecondary">
-                    {user.correo}
-                  </Typography>
-                </TableCell>
-                <TableCell>
-                  <Typography variant="body1" color="textSecondary">
-                    {user.identificacion}
-                  </Typography>
-                </TableCell>
-                <TableCell>
-                  <Typography variant="body1" color="textSecondary">
-                    {user.rol}
-                  </Typography>
-                </TableCell>
-                <TableCell>
-                  <Button
-                    variant="outlined"
-                    startIcon={<EditIcon />}
-                    onClick={() => handleEditOpen(user)}
-                  >
-                    Editar
-                  </Button>
-                  <IconButton
-                    color="error"
-                    onClick={() => handleDeleteUser(user.id)}
-                    sx={{ ml: 1 }}
-                  >
-                    <DeleteIcon />
-                  </IconButton>
                 </TableCell>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </Box>
+            </TableHead>
+            <TableBody>
+              {users.map((user) => (
+                <TableRow key={user.external_id}>
+                  <TableCell>
+                    <Typography variant="body1" color="textSecondary">
+                      {user.cedula}
+                    </Typography>
+                  </TableCell>
 
-      <Dialog open={open} onClose={handleClose}>
-        <DialogTitle>Agregar Nueva Cuenta</DialogTitle>
+                  <TableCell>
+                    <Typography variant="body1" color="textSecondary">
+                      {user.correo}
+                    </Typography>
+                  </TableCell>
+
+                  <TableCell>
+                    <Typography variant="body1" color="textSecondary">
+                      {user.nombres}
+                    </Typography>
+                  </TableCell>
+
+                  <TableCell>
+                    <Typography variant="body1" color="textSecondary">
+                      {user.apellidos}
+                    </Typography>
+                  </TableCell>
+
+                  <TableCell>
+                    <Typography variant="body1" color="textSecondary">
+                      {user.nombre_usuario}
+                    </Typography>
+                  </TableCell>
+
+                  <TableCell>
+                    <Typography variant="body1" color="textSecondary">
+                      {user.rol}
+                    </Typography>
+                  </TableCell>
+
+                  <TableCell>
+                    <IconButton
+                      color="warning"
+                      onClick={() => handleEditOpen(user)}
+                    >
+                      <EditIcon />
+                    </IconButton>
+                    <IconButton
+                      color="error"
+                      onClick={() => handleDeleteOpen(user.external_id)}
+                      sx={{ ml: 1 }}
+                    >
+                      <DeleteIcon />
+                    </IconButton>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </Box>
+      </DashboardCard>
+
+      <Dialog open={createOpen} onClose={handleCreateClose}>
+        <DialogTitle>Agregar Nueva Cuenta de Usuario</DialogTitle>
         <DialogContent>
-          <TextField
-            name="nombre"
-            label="Nombre"
-            value={newUser.nombre}
-            onChange={handleChange}
-            fullWidth
-            margin="normal"
-          />
-          <TextField
-            name="apellidos"
-            label="Apellidos"
-            value={newUser.apellidos}
-            onChange={handleChange}
-            fullWidth
-            margin="normal"
-          />
           <TextField
             name="correo"
             label="Correo"
@@ -279,9 +393,9 @@ const UserAccounts = () => {
             margin="normal"
           />
           <TextField
-            name="identificacion"
-            label="Identificación"
-            value={newUser.identificacion}
+            name="nombre_usuario"
+            label="Nombre de Usuario"
+            value={newUser.nombre_usuario}
             onChange={handleChange}
             fullWidth
             margin="normal"
@@ -295,9 +409,33 @@ const UserAccounts = () => {
             fullWidth
             margin="normal"
           />
+          <TextField
+            name="cedula"
+            label="Cedula"
+            value={newUser.cedula}
+            onChange={handleChange}
+            fullWidth
+            margin="normal"
+          />
+          <TextField
+            name="nombres"
+            label="Nombres"
+            value={newUser.nombres}
+            onChange={handleChange}
+            fullWidth
+            margin="normal"
+          />
+          <TextField
+            name="apellidos"
+            label="Apellidos"
+            value={newUser.apellidos}
+            onChange={handleChange}
+            fullWidth
+            margin="normal"
+          />
           <Select
-            name="rol"
-            value={newUser.rol}
+            name="external_rol"
+            value={newUser.external_rol}
             onChange={handleChange}
             fullWidth
             displayEmpty
@@ -305,12 +443,15 @@ const UserAccounts = () => {
             <MenuItem value="" disabled>
               Selecciona un rol
             </MenuItem>
-            <MenuItem value="Administrador">Administrador</MenuItem>
-            <MenuItem value="Usuario">Usuario</MenuItem>
+            {roles.map((rol) => (
+              <MenuItem key={rol.external_id} value={rol.external_id}>
+                {rol.nombre}
+              </MenuItem>
+            ))}
           </Select>
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleClose} color="primary">
+          <Button onClick={handleCreateClose} color="primary">
             Cancelar
           </Button>
           <Button onClick={handleAddUser} color="primary" variant="contained">
@@ -320,24 +461,8 @@ const UserAccounts = () => {
       </Dialog>
 
       <Dialog open={editOpen} onClose={handleEditClose}>
-        <DialogTitle>Modificar Cuenta</DialogTitle>
+        <DialogTitle>Modificar Cuenta de Usuario</DialogTitle>
         <DialogContent>
-          <TextField
-            name="nombre"
-            label="Nombre"
-            value={editUser.nombre}
-            onChange={handleEditChange}
-            fullWidth
-            margin="normal"
-          />
-          <TextField
-            name="apellidos"
-            label="Apellidos"
-            value={editUser.apellidos}
-            onChange={handleEditChange}
-            fullWidth
-            margin="normal"
-          />
           <TextField
             name="correo"
             label="Correo"
@@ -347,9 +472,9 @@ const UserAccounts = () => {
             margin="normal"
           />
           <TextField
-            name="identificacion"
-            label="Identificación"
-            value={editUser.identificacion}
+            name="nombre_usuario"
+            label="Nombre de Usuario"
+            value={editUser.nombre_usuario}
             onChange={handleEditChange}
             fullWidth
             margin="normal"
@@ -363,9 +488,33 @@ const UserAccounts = () => {
             fullWidth
             margin="normal"
           />
+          <TextField
+            name="cedula"
+            label="Cedula"
+            value={newUser.cedula}
+            onChange={handleChange}
+            fullWidth
+            margin="normal"
+          />
+          <TextField
+            name="nombres"
+            label="Nombres"
+            value={editUser.nombres}
+            onChange={handleEditChange}
+            fullWidth
+            margin="normal"
+          />
+          <TextField
+            name="apellidos"
+            label="Apellidos"
+            value={editUser.apellidos}
+            onChange={handleEditChange}
+            fullWidth
+            margin="normal"
+          />
           <Select
-            name="rol"
-            value={editUser.rol}
+            name="external_rol"
+            value={editUser.external_rol}
             onChange={handleEditChange}
             fullWidth
             displayEmpty
@@ -373,8 +522,11 @@ const UserAccounts = () => {
             <MenuItem value="" disabled>
               Selecciona un rol
             </MenuItem>
-            <MenuItem value="Administrador">Administrador</MenuItem>
-            <MenuItem value="Usuario">Usuario</MenuItem>
+            {roles.map((rol) => (
+              <MenuItem key={rol.external_id} value={rol.external_id}>
+                {rol.nombre}
+              </MenuItem>
+            ))}
           </Select>
         </DialogContent>
         <DialogActions>
@@ -386,7 +538,21 @@ const UserAccounts = () => {
           </Button>
         </DialogActions>
       </Dialog>
-      <Chatbot />
+
+      <Dialog open={deleteOpen} onClose={handleDeleteClose}>
+        <DialogTitle>Confirmar Eliminación</DialogTitle>
+        <DialogContent>
+          <Typography>¿Estás seguro de que quieres eliminar esta cuenta de usuario?</Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleDeleteClose} color="primary">
+            Cancelar
+          </Button>
+          <Button onClick={handleDeleteUser} color="error" variant="contained">
+            Eliminar
+          </Button>
+        </DialogActions>
+      </Dialog>
     </PageContainer>
   );
 };

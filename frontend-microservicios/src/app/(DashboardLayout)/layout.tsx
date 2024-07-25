@@ -3,6 +3,7 @@ import { styled, Container, Box } from "@mui/material";
 import React, { useState } from "react";
 import Header from "@/app/(DashboardLayout)/layout/header/Header";
 import Sidebar from "@/app/(DashboardLayout)/layout/sidebar/Sidebar";
+import Chatbot from "../chatbot/chatbot";
 
 
 const MainWrapper = styled("div")(() => ({
@@ -68,6 +69,7 @@ export default function RootLayout({
           {/* End Page */}
           {/* ------------------------------------------- */}
         </Container>
+        <Chatbot />
       </PageWrapper>
     </MainWrapper>
   );

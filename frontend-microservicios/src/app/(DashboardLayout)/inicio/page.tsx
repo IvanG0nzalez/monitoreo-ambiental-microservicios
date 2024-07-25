@@ -8,9 +8,20 @@ import RecentTransactions from "@/app/(DashboardLayout)/components/dashboard/Rec
 import ProductPerformance from "@/app/(DashboardLayout)/components/dashboard/ProductPerformance";
 import Blog from "@/app/(DashboardLayout)/components/dashboard/Blog";
 import MonthlyEarnings from "@/app/(DashboardLayout)/components/dashboard/MonthlyEarnings";
-import Chatbot from "@/app/chatbot/chatbot";
+import { useRouter } from "next/navigation";
+import { useEffect } from "react";
+import { getToken } from "@/hooks/SessionUtils";
 
 const Dashboard = () => {
+  const router = useRouter();
+
+  useEffect(() => {
+    const token = getToken();
+    if (!token) {
+      router.push("/");
+    }
+  }, []);
+  
   return (
     <PageContainer title="Dashboard" description="this is Dashboard">
       <Box>
@@ -26,7 +37,6 @@ const Dashboard = () => {
           </Grid>
         </Grid>
       </Box>
-      <Chatbot />
     </PageContainer>
   );
 };

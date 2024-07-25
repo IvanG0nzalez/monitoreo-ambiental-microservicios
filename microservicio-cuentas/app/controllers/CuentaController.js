@@ -33,7 +33,7 @@ class CuentaController {
         const id_usuario = req.params.id_usuario;
 
         if (!id_usuario) {
-            return res.status(400).json({ msg: 'Parámetros incorrectos', code: 400, datos: {} });
+            return res.status(202).json({ msg: 'Parámetros incorrectos', code: 400, datos: {} });
         }
 
         const cuentaAux = await cuenta.findOne({
@@ -42,7 +42,7 @@ class CuentaController {
         });
 
         if (!cuentaAux) {
-            return res.status(404).json({ msg: 'Cuenta no encontrada', code: 404, datos: {} });
+            return res.status(202).json({ msg: 'Cuenta no encontrada', code: 404, datos: {} });
         }
 
         return res.status(200).json({ msg: 'Cuenta encontrada', code: 200, datos: cuentaAux });
@@ -93,7 +93,7 @@ class CuentaController {
         const cuentaAux = await cuenta.findOne({ where: { id_usuario: id_usuario } });
         console.log(cuentaAux);
         if (!cuentaAux) {
-            return res.status(404).json({ msg: 'Cuenta no encontrada', code: 404, datos: {} });
+            return res.status(202).json({ msg: 'Cuenta no encontrada', code: 404, datos: {} });
         }
 
         let camposActualizar = {};
@@ -142,19 +142,19 @@ class CuentaController {
         const id_usuario = req.params.id_usuario;
 
         if (!id_usuario) {
-            return res.status(400).json({ msg: 'Parámetros incorrectos', code: 400, datos: {} });
+            return res.status(202).json({ msg: 'Parámetros incorrectos', code: 400, datos: {} });
         }
 
         const cuentaAux = await cuenta.findOne({ where: { id_usuario: id_usuario } });
 
         if (!cuentaAux) {
-            return res.status(404).json({ msg: 'Cuenta no encontrada', code: 404, datos: {} });
+            return res.status(202).json({ msg: 'Cuenta no encontrada', code: 404, datos: {} });
         }
 
         const cuenta_eliminada = await cuenta.destroy({ where: { id_usuario: id_usuario } });
 
         if (!cuenta_eliminada) {
-            return res.status(500).json({ msg: 'Error al eliminar cuenta', code: 500, datos: {} });
+            return res.status(202).json({ msg: 'Error al eliminar cuenta', code: 500, datos: {} });
         }
 
         return res.status(200).json({ msg: 'Cuenta eliminada', code: 200, datos: cuenta_eliminada });
@@ -164,23 +164,23 @@ class CuentaController {
         const { correo, clave } = req.body;
 
         if (!correo || !clave) {
-            return res.status(400).json({ msg: 'Parámetros incorrectos', code: 400, datos: {} });
+            return res.status(202).json({ msg: 'Parámetros incorrectos', code: 400, datos: {} });
         }
 
         const cuentaAux = await cuenta.findOne({ where: { correo: correo } });
 
         if (!cuentaAux) {
-            return res.status(404).json({ msg: 'Cuenta no encontrada', code: 404, datos: {} });
+            return res.status(202).json({ msg: 'Credenciales incorrectas', code: 404, datos: {} });
         }
 
         if (!cuentaAux.estado) {
-            return res.status(401).json({ msg: 'Cuenta deshabilitada', code: 401, datos: {} });
+            return res.status(202).json({ msg: 'Cuenta deshabilitada', code: 401, datos: {} });
         }
 
         const claveCorrecta = await bcrypt.compare(clave, cuentaAux.clave);
 
         if (!claveCorrecta) {
-            return res.status(401).json({ msg: 'Credenciales incorrectas', code: 401, datos: {} });
+            return res.status(202).json({ msg: 'Credenciales incorrectas', code: 401, datos: {} });
         }
 
         const token_data = {

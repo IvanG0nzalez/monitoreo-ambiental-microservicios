@@ -9,6 +9,7 @@ var apiRouter = require('./routes/api');
 
 const models = require('./app/models');
 const { connect, consumeMessage } = require('./app/rabbitmq');
+const cors = require('cors');
 
 var app = express();
 
@@ -20,6 +21,8 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
+app.use(cors());
+app.options('*', cors());
 
 app.use('/', indexRouter);
 app.use('/api', apiRouter);

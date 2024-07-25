@@ -9,7 +9,7 @@ let usuario = models.usuario;
 class UsuarioController {
     async listar(req, res) {
         const lista_usuarios = await usuario.findAll({
-            attributes: ['cedula', 'nombres', 'apellidos', 'external_id'],
+            attributes: ['id', 'cedula', 'nombres', 'apellidos', 'external_id'],
             include: [{
                 model: rol,
                 as: 'rol',
@@ -60,7 +60,7 @@ class UsuarioController {
         const { external_id } = req.params;
 
         if (!external_id) {
-            return res.status(400).json({ msg: 'Parámetros incorrectos', code: 400, datos: {} });
+            return res.status(202).json({ msg: 'Parámetros incorrectos', code: 400, datos: {} });
         }
 
         const usuario_obtenido = await usuario.findOne({
@@ -74,7 +74,7 @@ class UsuarioController {
         });
 
         if (!usuario_obtenido) {
-            return res.status(404).json({ msg: 'Usuario no encontrado', code: 404, datos: {} });
+            return res.status(202).json({ msg: 'Usuario no encontrado', code: 404, datos: {} });
         }
 
         return res.status(200).json({ msg: 'Usuario encontrado', code: 200, datos: usuario_obtenido });
@@ -83,11 +83,11 @@ class UsuarioController {
     async crear(req, res) {
         const { correo, nombre_usuario, clave, cedula, nombres, apellidos, external_rol } = req.body;
         if (!correo || !nombre_usuario || !clave || !external_rol || !cedula) {
-            return res.status(400).json({ msg: 'Parámetros incorrectos', code: 400, datos: {} });
+            return res.status(202).json({ msg: 'Parámetros incorrectos', code: 400, datos: {} });
         }
         const rolAux = await rol.findOne({ where: { external_id: external_rol } });
         if (!rolAux) {
-            return res.status(404).json({ msg: 'Rol no encontrado', code: 404, datos: {} });
+            return res.status(202).json({ msg: 'Rol no encontrado', code: 404, datos: {} });
         }
         const transaction = await models.sequelize.transaction();
         try {
@@ -101,7 +101,7 @@ class UsuarioController {
             }, { transaction });
             if (!nuevo_usuario) {
                 await transaction.rollback();
-                return res.status(500).json({ msg: 'Error al crear usuario', code: 500, datos: {} });
+                return res.status(202).json({ msg: 'Error al crear usuario', code: 500, datos: {} });
             }
             await sendMessage('usuario_creado', {
                 correo,
@@ -114,14 +114,14 @@ class UsuarioController {
 
                 if (!success) {
                     await transaction.rollback();
-                    return res.status(500).json({ msg: 'Error al crear usuario', code: 500, datos: {} });
+                    return res.status(202).json({ msg: 'Error al crear usuario', code: 500, datos: {} });
                 }
             });
             await transaction.commit();
             return res.status(201).json({ msg: 'Usuario y cuenta creados', code: 201 });
         } catch (error) {
             await transaction.rollback();
-            return res.status(500).json({ msg: 'Error al crear usuario', code: 500, datos: error });
+            return res.status(202).json({ msg: 'Error al crear usuario', code: 500, datos: error });
         }
     }
 
@@ -130,13 +130,13 @@ class UsuarioController {
         const { correo, nombre_usuario, clave, cedula, nombres, apellidos } = req.body;
 
         if (!external_id) {
-            return res.status(400).json({ msg: 'Parámetros incorrectos', code: 400, datos: {} });
+            return res.status(202).json({ msg: 'Parámetros incorrectos', code: 400, datos: {} });
         }
 
         const usuarioAux = await usuario.findOne({ where: { external_id: external_id } });
 
         if (!usuarioAux) {
-            return res.status(404).json({ msg: 'Usuario no encontrado', code: 404, datos: {} });
+            return res.status(202).json({ msg: 'Usuario no encontrado', code: 404, datos: {} });
         }
 
         let camposActualizar = {};
@@ -150,7 +150,7 @@ class UsuarioController {
             const usuario_actualizado = await usuario.update(camposActualizar, { where: { external_id: external_id }, transaction });
             if (!usuario_actualizado) {
                 await transaction.rollback();
-                return res.status(500).json({ msg: 'Error al actualizar usuario', code: 500, datos: {} });
+                return res.status(202).json({ msg: 'Error al actualizar usuario 1', code: 500, datos: {} });
             }
 
             if (correo || nombre_usuario || clave) {
@@ -165,7 +165,7 @@ class UsuarioController {
                     const { success, msg } = message;
                     if (!success) {
                         await transaction.rollback();
-                        return res.status(500).json({ msg: 'Error al actualizar usuario', code: 500, datos: {} });
+                        return res.status(202).json({ msg: 'Error al actualizar usuario', code: 500, datos: {} });
                     }
                 });
 
@@ -175,7 +175,7 @@ class UsuarioController {
             return res.status(200).json({ msg: 'Usuario actualizado', code: 200 });
         } catch (error) {
             await transaction.rollback();
-            return res.status(500).json({ msg: 'Error al actualizar usuario', code: 500, datos: {} });
+            return res.status(202).json({ msg: 'Error al actualizar usuario 2', code: 500, datos: {} });
         }
     }
 
@@ -183,13 +183,13 @@ class UsuarioController {
         const { external_id } = req.params;
 
         if (!external_id) {
-            return res.status(400).json({ msg: 'Parámetros incorrectos', code: 400, datos: {} });
+            return res.status(202).json({ msg: 'Parámetros incorrectos', code: 400, datos: {} });
         }
 
         const usuarioAux = await usuario.findOne({ where: { external_id: external_id } });
 
         if (!usuarioAux) {
-            return res.status(404).json({ msg: 'Usuario no encontrado', code: 404, datos: {} });
+            return res.status(202).json({ msg: 'Usuario no encontrado', code: 404, datos: {} });
         }
 
         const transaction = await models.sequelize.transaction();
@@ -199,7 +199,7 @@ class UsuarioController {
 
             if (!usuario_eliminado) {
                 await transaction.rollback();
-                return res.status(500).json({ msg: 'Error al eliminar usuario', code: 500, datos: {} });
+                return res.status(202).json({ msg: 'Error al eliminar usuario', code: 500, datos: {} });
             }
 
             await sendMessage('eliminar_cuenta', { id_usuario: usuarioAux.id });
@@ -208,7 +208,7 @@ class UsuarioController {
                 const { success, msg } = message;
                 if (!success) {
                     await transaction.rollback();
-                    return res.status(500).json({ msg: 'Error al eliminar usuario', code: 500, datos: {} });
+                    return res.status(202).json({ msg: 'Error al eliminar usuario', code: 500, datos: {} });
                 }
             });
 
@@ -216,7 +216,7 @@ class UsuarioController {
             return res.status(200).json({ msg: 'Usuario eliminado', code: 200 });
         } catch (error) {
             await transaction.rollback();
-            return res.status(500).json({ msg: 'Error al eliminar usuario', code: 500, datos: {} });
+            return res.status(202).json({ msg: 'Error al eliminar usuario', code: 500, datos: {} });
         }
     }
 }
