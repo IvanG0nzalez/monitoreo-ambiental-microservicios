@@ -8,7 +8,6 @@ var indexRouter = require('./routes/index');
 var apiRouter = require('./routes/api');
 
 const models = require('./app/models');
-const rabbitmqHandler = require('./app/rabbitmqHandler');
 const { connect, consumeMessage } = require('./app/rabbitmq');
 const cors = require('cors');
 
