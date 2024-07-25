@@ -19,7 +19,7 @@ const GraphicsScreen = () => {
     data.forEach((item, index) => {
       if (item.sensor.tipo_medicion === type) {
         processed.data.push(parseFloat(item.valor_medido));
-        if (index % 5 === 0) {
+        if (index % 15 === 0) {
           processed.labels.push(item.hora.split(':').slice(0, 2).join(':'));
         } else {
           processed.labels.push('');
@@ -53,12 +53,13 @@ const GraphicsScreen = () => {
             datasets: [{ data: data.data }],
           }}
           width={screenWidth - 40}
-          height={220}
+          height={320}
           chartConfig={config}
           bezier
           style={styles.chart}
           xLabelsOffset={-10}
           formatXLabel={(value) => value}
+          verticalLabelRotation={90}
         />
       </View>
     );

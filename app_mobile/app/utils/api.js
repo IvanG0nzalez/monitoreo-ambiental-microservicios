@@ -1,4 +1,4 @@
-export const URL_API = "http:192.168.43.114:3000/api";
+export const URL_API = "http:192.168.3.171:3000/api";
 
 export async function METHOD_GET(resource) {
     try {
