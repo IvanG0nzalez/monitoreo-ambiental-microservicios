@@ -20,7 +20,7 @@ class RolController {
         const { external_id } = req.params;
 
         if (!external_id) {
-            return res.status(400).json({ msg: 'Parámetros incorrectos', code: 400, datos: {} });
+            return res.status(202).json({ msg: 'Parámetros incorrectos', code: 400, datos: {} });
         }
 
         const rol_obtenido = await rol.findOne({
@@ -29,7 +29,7 @@ class RolController {
         });
 
         if (!rol_obtenido) {
-            return res.status(404).json({ msg: 'Rol no encontrado', code: 404, datos: {} });
+            return res.status(202).json({ msg: 'Rol no encontrado', code: 404, datos: {} });
         }
 
         return res.status(200).json({ msg: 'Rol encontrado', code: 200, datos: rol_obtenido });
@@ -39,7 +39,7 @@ class RolController {
         const { nombre } = req.body;
 
         if (!nombre) {
-            return res.status(400).json({ msg: 'Parámetros incorrectos', code: 400, datos: {} });
+            return res.status(202).json({ msg: 'Parámetros incorrectos', code: 400, datos: {} });
         }
 
         const UUID = require('uuid');
@@ -50,7 +50,7 @@ class RolController {
         });
 
         if (!nuevo_rol) {
-            return res.status(500).json({ msg: 'Error al crear el rol', code: 500, datos: {} });
+            return res.status(202).json({ msg: 'Error al crear el rol', code: 500, datos: {} });
         }
 
         return res.status(201).json({ msg: 'Rol creado', code: 201 });
@@ -61,7 +61,7 @@ class RolController {
         const { nombre } = req.body;
 
         if (!external_id || !nombre) {
-            return res.status(400).json({ msg: 'Parámetros incorrectos', code: 400, datos: {} });
+            return res.status(202).json({ msg: 'Parámetros incorrectos', code: 400, datos: {} });
         }
 
         const rol_obtenido = await rol.findOne({
@@ -69,13 +69,13 @@ class RolController {
         });
 
         if (!rol_obtenido) {
-            return res.status(404).json({ msg: 'Rol no encontrado', code: 404, datos: {} });
+            return res.status(202).json({ msg: 'Rol no encontrado', code: 404, datos: {} });
         }
 
         const rol_actualizado = await rol_obtenido.update({ nombre: nombre });
 
         if (!rol_actualizado) {
-            return res.status(500).json({ msg: 'Error al actualizar el rol', code: 500, datos: {} });
+            return res.status(202).json({ msg: 'Error al actualizar el rol', code: 500, datos: {} });
         }
 
         return res.status(200).json({ msg: 'Rol actualizado', code: 200, datos: rol_actualizado });

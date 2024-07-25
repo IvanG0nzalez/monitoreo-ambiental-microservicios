@@ -14,14 +14,14 @@ router.get('/usuarios',auth, usuarioControl.listar);
 //router.get('/usuarios_cuentas', auth, usuarioControl.listar_con_cuenta);
 router.get('/usuarios/:external_id', auth, usuarioControl.obtener);
 router.post('/usuarios/crear', usuarioControl.crear);
-router.patch('/usuarios/:external_id', auth, usuarioControl.actualizar);
-router.delete('/usuarios/:external_id', auth, usuarioControl.eliminar);
+router.patch('/usuarios/actualizar/:external_id', auth, usuarioControl.actualizar);
+router.delete('/usuarios/eliminar/:external_id', auth, usuarioControl.eliminar);
 
 
 // Endpoints de roles
-router.get('/roles', auth, rolControl.listar);
-router.get('/roles/:external_id', auth, rolControl.obtener);
+router.get('/roles', rolControl.listar);
+router.get('/roles/:external_id', rolControl.obtener);
 router.post('/roles/crear', auth, rolControl.crear);
-router.patch('/roles/:external_id', auth, rolControl.actualizar);
+router.patch('/roles/actualizar/:external_id', auth, rolControl.actualizar);
 
 module.exports = router;
