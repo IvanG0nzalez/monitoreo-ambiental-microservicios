@@ -1,71 +1,62 @@
 "use client";
-import Link from "next/link";
-import { Grid, Box, Card, Stack, Typography } from "@mui/material";
-import { SnackbarProvider } from "notistack";
-// components
+import { Grid, Box } from "@mui/material";
 import PageContainer from "@/app/(DashboardLayout)/components/container/PageContainer";
-import Logo from "@/app/(DashboardLayout)/layout/shared/logo/Logo";
-import AuthLogin from "@/app/authentication/auth/AuthLogin";
+// components
+import SalesOverview from "@/app/(DashboardLayout)/components/dashboard/SalesOverview";
+import YearlyBreakup from "@/app/(DashboardLayout)/components/dashboard/YearlyBreakup";
+import YearlyBreakupUser from "@/app/(DashboardLayout)/components/dashboard/YearlyBreakupUser"; 
+import RecentTransactions from "@/app/(DashboardLayout)/components/dashboard/RecentTransactions";
+import ProductPerformance from "@/app/(DashboardLayout)/components/dashboard/ProductPerformance";
+import Blog from "@/app/(DashboardLayout)/components/dashboard/Blog";
+import MonthlyEarnings from "@/app/(DashboardLayout)/components/dashboard/MonthlyEarnings";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { getToken } from "@/hooks/SessionUtils";
+import { api_registros } from "@/hooks/Api";
+import { useSnackbar } from "notistack";
+import SalesOverviewUser from "./(DashboardLayout)/components/dashboard/SalesOverviewUser";
 
-const Login2 = () => {
+const Dashboard = () => {
+  const router = useRouter();
+  const token = getToken();
+  const { enqueueSnackbar } = useSnackbar();
+  const [registros, setRegistros] = useState([]);
+
+  useEffect(() => {
+    if (!token) {
+      router.push("/");
+    }
+  }, []);
+
+  useEffect(() => {
+    const fetchRegistros = async () => {
+      const response = await api_registros.listar(token);
+      console.log(response);
+      
+      if (response.data.code !== 200) {
+        enqueueSnackbar(response.data.msg, { variant: "error" });
+        return;
+      }
+
+      setRegistros(response.data.datos);
+    };
+    fetchRegistros();
+  }, []);
+  
   return (
-
-    <PageContainer title="Login" description="this is Login page">
-      <Box
-        sx={{
-          position: "relative",
-          "&:before": {
-            content: '""',
-            background: "radial-gradient(#d2f1df, #d3d7fa, #bad8f4)",
-            backgroundSize: "400% 400%",
-            animation: "gradient 15s ease infinite",
-            position: "absolute",
-            height: "100%",
-            width: "100%",
-            opacity: "0.3",
-          },
-        }}
-      >
-        <Grid
-          container
-          spacing={0}
-          justifyContent="center"
-          sx={{ height: "100vh" }}
-        >
-          <Grid
-            item
-            xs={12}
-            sm={12}
-            lg={4}
-            xl={3}
-            display="flex"
-            justifyContent="center"
-            alignItems="center"
-          >
-            <Card
-              elevation={9}
-              sx={{ p: 4, zIndex: 1, width: "100%", maxWidth: "500px" }}
-            >
-              <Box display="flex" alignItems="center" justifyContent="center">
-                <Logo />
-              </Box>
-              <AuthLogin
-                subtext={
-                  <Typography
-                    variant="subtitle1"
-                    textAlign="center"
-                    color="textSecondary"
-                    mb={1}
-                  >
-                    Tu aplicación de monitoreo favorita
-                  </Typography>
-                }
-              />
-            </Card>
+    <PageContainer title="Monitoreo" description="this is Dashboard">
+      <Box display="flex" justifyContent="center" m={3}>
+        <Grid container spacing={3} justifyContent="center">
+          <Grid item xs={8} md={8}>
+            <SalesOverviewUser />
+          </Grid>
+          <Grid item xs={8} md={8}>
+            <YearlyBreakupUser />
           </Grid>
         </Grid>
       </Box>
     </PageContainer>
   );
 };
-export default Login2;
+
+export default Dashboard;
