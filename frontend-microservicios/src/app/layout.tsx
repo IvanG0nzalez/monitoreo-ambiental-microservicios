@@ -4,11 +4,13 @@ import { ThemeProvider } from "@mui/material/styles";
 import CssBaseline from "@mui/material/CssBaseline";
 import { SnackbarProvider } from "notistack";
 
+
 export default function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+
   return (
     <html lang="en">
       <body>
@@ -23,6 +25,7 @@ export default function RootLayout({
           <ThemeProvider theme={baselightTheme}>
             {/* CssBaseline kickstart an elegant, consistent, and simple baseline to build upon. */}
             <CssBaseline />
+
             {children}
           </ThemeProvider>
         </SnackbarProvider>

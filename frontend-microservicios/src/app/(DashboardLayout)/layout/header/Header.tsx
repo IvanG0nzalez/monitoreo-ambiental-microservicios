@@ -14,7 +14,7 @@ import Link from "next/link";
 // components
 import Profile from "./Profile";
 import { IconBellRinging, IconMenu } from "@tabler/icons-react";
-import { borrarSesion } from "@/hooks/SessionUtils";
+import { borrarSesion, getToken } from "@/hooks/SessionUtils";
 import { useRouter } from "next/navigation";
 
 interface ItemType {
@@ -25,6 +25,7 @@ const Header = ({ toggleMobileSidebar }: ItemType) => {
   // const lgUp = useMediaQuery((theme) => theme.breakpoints.up('lg'));
   // const lgDown = useMediaQuery((theme) => theme.breakpoints.down('lg'));
   const router = useRouter();
+  const token = getToken();
 
   const AppBarStyled = styled(AppBar)(({ theme }) => ({
     boxShadow: "none",
@@ -44,6 +45,11 @@ const Header = ({ toggleMobileSidebar }: ItemType) => {
     borrarSesion();
     router.push("/");
   };
+
+  const handleLogin = () => {
+    router.push("/autenticacion/login");
+  };
+
 
   return (
     <AppBarStyled position="sticky" color="default">
@@ -76,7 +82,8 @@ const Header = ({ toggleMobileSidebar }: ItemType) => {
 
         <Box flexGrow={1} />
         <Stack spacing={1} direction="row" alignItems="center">
-          <Button
+          { token ? (
+            <Button
             variant="contained"
             disableElevation
             color="primary"
@@ -84,6 +91,17 @@ const Header = ({ toggleMobileSidebar }: ItemType) => {
           >
             Cerrar Sesión
           </Button>
+          ) : (
+            <Button
+            variant="contained"
+            disableElevation
+            color="primary"
+            onClick={handleLogin}
+          >
+            Iniciar Sesión
+          </Button>
+          )}
+          
         </Stack>
       </ToolbarStyled>
     </AppBarStyled>

@@ -2,19 +2,14 @@
 import { Grid, Box } from "@mui/material";
 import PageContainer from "@/app/(DashboardLayout)/components/container/PageContainer";
 // components
-import SalesOverview from "@/app/(DashboardLayout)/components/dashboard/SalesOverview";
-import YearlyBreakup from "@/app/(DashboardLayout)/components/dashboard/YearlyBreakup";
-import YearlyBreakupUser from "@/app/(DashboardLayout)/components/dashboard/YearlyBreakupUser"; 
-import RecentTransactions from "@/app/(DashboardLayout)/components/dashboard/RecentTransactions";
-import ProductPerformance from "@/app/(DashboardLayout)/components/dashboard/ProductPerformance";
-import Blog from "@/app/(DashboardLayout)/components/dashboard/Blog";
-import MonthlyEarnings from "@/app/(DashboardLayout)/components/dashboard/MonthlyEarnings";
+import GraficaValoresMedidos from "@/app/(DashboardLayout)/components/dashboard/GraficaValoresMedidos";
+import NivelesAlerta from "@/app/(DashboardLayout)/components/dashboard/NivelesAlerta";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { getToken } from "@/hooks/SessionUtils";
 import { api_registros } from "@/hooks/Api";
 import { useSnackbar } from "notistack";
-import SalesOverviewUser from "./(DashboardLayout)/components/dashboard/SalesOverviewUser";
+import Header from "./(DashboardLayout)/layout/header/Header";
 
 const Dashboard = () => {
   const router = useRouter();
@@ -31,7 +26,6 @@ const Dashboard = () => {
   useEffect(() => {
     const fetchRegistros = async () => {
       const response = await api_registros.listar(token);
-      console.log(response);
       
       if (response.data.code !== 200) {
         enqueueSnackbar(response.data.msg, { variant: "error" });
@@ -42,20 +36,27 @@ const Dashboard = () => {
     };
     fetchRegistros();
   }, []);
+
+  const [isMobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+
   
   return (
+    <>
+    <Header toggleMobileSidebar={() => setMobileSidebarOpen(true)} />
+
     <PageContainer title="Monitoreo" description="this is Dashboard">
       <Box display="flex" justifyContent="center" m={3}>
         <Grid container spacing={3} justifyContent="center">
           <Grid item xs={8} md={8}>
-            <SalesOverviewUser />
+            <GraficaValoresMedidos />
           </Grid>
           <Grid item xs={8} md={8}>
-            <YearlyBreakupUser />
+            <NivelesAlerta />
           </Grid>
         </Grid>
       </Box>
     </PageContainer>
+    </>
   );
 };
 

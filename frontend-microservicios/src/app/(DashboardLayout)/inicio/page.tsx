@@ -2,23 +2,16 @@
 import { Grid, Box } from "@mui/material";
 import PageContainer from "@/app/(DashboardLayout)/components/container/PageContainer";
 // components
-import SalesOverview from "@/app/(DashboardLayout)/components/dashboard/SalesOverview";
-import YearlyBreakup from "@/app/(DashboardLayout)/components/dashboard/YearlyBreakup";
-import RecentTransactions from "@/app/(DashboardLayout)/components/dashboard/RecentTransactions";
-import ProductPerformance from "@/app/(DashboardLayout)/components/dashboard/ProductPerformance";
-import Blog from "@/app/(DashboardLayout)/components/dashboard/Blog";
-import MonthlyEarnings from "@/app/(DashboardLayout)/components/dashboard/MonthlyEarnings";
+import GraficaValoresMedidos from "@/app/(DashboardLayout)/components/dashboard/GraficaValoresMedidos";
+import NivelesAlerta from "@/app/(DashboardLayout)/components/dashboard/NivelesAlerta";
+import NivelesAulaMagna from "@/app/(DashboardLayout)/components/dashboard/NivelesAulaMagna";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { getToken } from "@/hooks/SessionUtils";
-import { api_registros } from "@/hooks/Api";
-import { useSnackbar } from "notistack";
 
 const Dashboard = () => {
   const router = useRouter();
   const token = getToken();
-  const { enqueueSnackbar } = useSnackbar();
-  const [registros, setRegistros] = useState([]);
 
   useEffect(() => {
     if (!token) {
@@ -26,33 +19,18 @@ const Dashboard = () => {
     }
   }, []);
 
-  useEffect(() => {
-    const fetchRegistros = async () => {
-      const response = await api_registros.listar(token);
-      console.log(response);
-      
-      if (response.data.code !== 200) {
-        enqueueSnackbar(response.data.msg, { variant: "error" });
-        return;
-      }
-
-      setRegistros(response.data.datos);
-    };
-    fetchRegistros();
-  }, []);
-  
   return (
     <PageContainer title="Dashboard" description="this is Dashboard">
       <Box>
         <Grid container spacing={3}>
           <Grid item xs={12}>
-            <SalesOverview />
+            <GraficaValoresMedidos />
           </Grid>
           <Grid item xs={12}>
-            <ProductPerformance />
+            <NivelesAulaMagna />
           </Grid>
           <Grid item xs={12}>
-            <YearlyBreakup />
+            <NivelesAlerta />
           </Grid>
         </Grid>
       </Box>

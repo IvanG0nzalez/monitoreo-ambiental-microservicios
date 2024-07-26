@@ -34,6 +34,7 @@ export default function RootLayout({
 }) {
   const [isSidebarOpen, setSidebarOpen] = useState(true);
   const [isMobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+  //TODO consumir para saber rol
   return (
     <MainWrapper className="mainwrapper">
       {/* ------------------------------------------- */}
