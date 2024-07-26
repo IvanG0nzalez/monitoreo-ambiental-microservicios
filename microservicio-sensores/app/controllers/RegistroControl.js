@@ -3,6 +3,7 @@ var models = require('../models');
 var registros = models.registro_climatico;
 var sensor = models.sensor;
 var sequelize = models.sequelize;
+const { Op } = require('sequelize')
 
 var fecha_hora_actual = new Date();
 // Ajustar la fecha y hora a la zona horaria de Ecuador (UTC-5)
@@ -58,6 +59,57 @@ class RegistroControl {
         } else {
             res.status(200);
             res.json({ msg: "OK", code: 200, datos: lista });
+        }
+    }
+
+    async listar_entre_fechas(req, res) {
+        const { fecha_inicio, fecha_fin } = req.params;
+
+        if (!fecha_inicio || !fecha_fin) {
+            return res.status(400).json({ msg: "Fechas no proporcionadas", code: 400 });
+        }
+
+        const inicio = new Date(fecha_inicio);
+        const fin = new Date(fecha_fin);
+
+        if (isNaN(inicio.getTime()) || isNaN(fin.getTime())) {
+            return res.status(400).json({ msg: "Formato de fecha inválido", code: 400 });
+        }
+
+        if (inicio > fin) {
+            return res.status(400).json({ msg: "La fecha de inicio no puede ser después de la fecha de fin", code: 400 });
+        }
+
+        try {
+            var lista = await registros.findAll({
+                where: {
+                    fecha: {
+                        [Op.between]: [fecha_inicio, fecha_fin]
+                    }
+                },
+                include: [{
+                    model: models.sensor, as: "sensor",
+                    attributes: ['alias', 'tipo_medicion'],
+                }],
+                attributes: ['fecha', 'hora', 'valor_medido', 'external_id'],
+            });
+
+            if (lista.length === 0) {
+                res.status(200).json({ msg: "OK", tag: "No existen registros entre esas fechas", datos: lista });
+            } else {
+                const datos_registro = lista.map(registro => {
+                    return {
+                        fecha: registro.fecha,
+                        hora: registro.hora,
+                        valor_medido: registro.valor_medido,
+                        tipo_medicion: registro.sensor.tipo_medicion,
+                    }
+                });
+                res.status(200).json({ msg: "OK", code: 200, datos: datos_registro });
+            }
+        } catch (error) {
+            console.error(`Error al listar registros entre fechas: ${error.message}`);
+            res.status(500).json({ msg: "Error interno del servidor", code: 500 });
         }
     }
 
