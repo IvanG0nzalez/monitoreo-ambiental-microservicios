@@ -18,6 +18,8 @@ import {
 import PageContainer from "@/app/(DashboardLayout)/components/container/PageContainer";
 import BlankCard from "@/app/(DashboardLayout)/components/shared/BlankCard";
 import AddIcon from "@mui/icons-material/Add";
+import StopCircleIcon from '@mui/icons-material/StopCircle';
+import PlayCircleFilledWhiteIcon from '@mui/icons-material/PlayCircleFilledWhite';
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import ThermostatIcon from "@mui/icons-material/Thermostat";
@@ -86,6 +88,27 @@ const SensorDisplayPage = () => {
     setCreateOpen(true);
   };
 
+  const handleIniciarMonioreo = async () => {
+    const response = await api_sensores.iniciar_monitoreo(token);
+
+    if (response.data.code !== 200) {
+      enqueueSnackbar(response.data.msg, { variant: "error" });
+      return;
+    }
+    enqueueSnackbar(response.data.msg, { variant: "success" });
+  };
+
+  const handleDetenerMonitoreo = async () => {
+    const response = await api_sensores.detener_monitoreo(token);
+
+    if (response.data.code !== 200) {
+      enqueueSnackbar(response.data.msg, { variant: "error" });
+      return;
+    }
+
+    enqueueSnackbar(response.data.msg, { variant: "success" });
+  };
+
   const handleCreateClose = () => {
     setCreateOpen(false);
   };
@@ -135,7 +158,7 @@ const SensorDisplayPage = () => {
 
   const handleEditSensor = async () => {
     const response = await api_sensores.actualizar(editSensor.external_id, editSensor, token);
-    
+
     if (response.data.code !== 200) {
       enqueueSnackbar(response.data.msg, { variant: "error" });
       return;
@@ -202,13 +225,36 @@ const SensorDisplayPage = () => {
       <DashboardCard title="Sensores">
         <Grid container spacing={3} justifyContent="center">
           <Grid item xs={12}>
-            <Button
-              variant="contained"
-              startIcon={<AddIcon />}
-              onClick={handleCreateOpen}
-            >
-              Agregar Sensor
-            </Button>
+            <Box display="flex" justifyContent="space-between" alignItems="center">
+
+              <Button
+                variant="contained"
+                startIcon={<AddIcon />}
+                onClick={handleCreateOpen}
+              >
+                Agregar Sensor
+              </Button>
+              <Box display="flex" gap={2}>
+
+                <Button
+                  variant="contained"
+                  color="success"
+                  startIcon={<PlayCircleFilledWhiteIcon />}
+                  onClick={handleIniciarMonioreo}
+                >
+                  Iniciar monitoreo
+                </Button>
+
+                <Button
+                  variant="contained"
+                  color="error"
+                  startIcon={<StopCircleIcon />}
+                  onClick={handleDetenerMonitoreo}
+                >
+                  Detener monitoreo
+                </Button>
+              </Box>
+            </Box>
           </Grid>
           {sensors.map((sensor) => (
             <Grid item key={sensor.external_id} xs={12} sm={6} md={4} lg={3}>
