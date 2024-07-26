@@ -294,8 +294,8 @@ const SensorDisplayPage = () => {
         <DialogTitle>Modificar Sensor</DialogTitle>
         <DialogContent>
           <TextField
-            name="name"
-            label="Nombre"
+            name="alias"
+            label="Alias"
             value={editSensor.alias}
             onChange={handleEditChange}
             fullWidth

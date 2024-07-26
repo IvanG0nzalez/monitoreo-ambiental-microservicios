@@ -9,17 +9,36 @@ import ProductPerformance from "@/app/(DashboardLayout)/components/dashboard/Pro
 import Blog from "@/app/(DashboardLayout)/components/dashboard/Blog";
 import MonthlyEarnings from "@/app/(DashboardLayout)/components/dashboard/MonthlyEarnings";
 import { useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { getToken } from "@/hooks/SessionUtils";
+import { api_registros } from "@/hooks/Api";
+import { useSnackbar } from "notistack";
 
 const Dashboard = () => {
   const router = useRouter();
+  const token = getToken();
+  const { enqueueSnackbar } = useSnackbar();
+  const [registros, setRegistros] = useState([]);
 
   useEffect(() => {
-    const token = getToken();
     if (!token) {
       router.push("/");
     }
+  }, []);
+
+  useEffect(() => {
+    const fetchRegistros = async () => {
+      const response = await api_registros.listar(token);
+      console.log(response);
+      
+      if (response.data.code !== 200) {
+        enqueueSnackbar(response.data.msg, { variant: "error" });
+        return;
+      }
+
+      setRegistros(response.data.datos);
+    };
+    fetchRegistros();
   }, []);
   
   return (

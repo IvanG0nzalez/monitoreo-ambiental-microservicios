@@ -118,7 +118,7 @@ class UsuarioController {
                 }
             });
             await transaction.commit();
-            return res.status(201).json({ msg: 'Usuario y cuenta creados', code: 201 });
+            return res.status(201).json({ msg: 'Usuario y cuenta creados', code: 201, datos: nuevo_usuario.external_id });
         } catch (error) {
             await transaction.rollback();
             return res.status(202).json({ msg: 'Error al crear usuario', code: 500, datos: error });

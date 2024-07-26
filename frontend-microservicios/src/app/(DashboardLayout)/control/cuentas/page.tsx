@@ -83,6 +83,7 @@ const UserAccounts = () => {
     apellidos: "",
     external_id: "",
     external_rol: "",
+    rol: "",
   });
 
   const [createOpen, setCreateOpen] = useState(false);
@@ -136,7 +137,6 @@ const UserAccounts = () => {
             external_rol: user.rol.external_id,
           }
         });
-        console.log(combinedUsers, "combinedUsers");
         
         setUsers(combinedUsers);
         setRoles(response_roles.data.datos);
@@ -156,7 +156,7 @@ const UserAccounts = () => {
     setCreateOpen(false);
   };
 
-  const handleEditOpen = (user: User) => {
+  const handleEditOpen = (user: User) => {    
     setEditUser(user);
     setEditOpen(true);
   };
@@ -176,10 +176,9 @@ const UserAccounts = () => {
   };
 
   const handleAddUser = async () => {
-    console.log("newUser", newUser);
     
     const response = await api_usuarios.crear(newUser, token);
-
+    
     if (response.data.code !== 201) {
       enqueueSnackbar(response.data.msg, { variant: "error" });
       return;
@@ -207,10 +206,9 @@ const UserAccounts = () => {
   };
 
   const handleEditUser = async () => {
-    console.log(editUser);
-
+    
     const response = await api_usuarios.actualizar(editUser.external_id, editUser, token);
-
+    
     if (response.data.code !== 200) {
       enqueueSnackbar(response.data.msg, { variant: "error" });
       return;
@@ -219,8 +217,9 @@ const UserAccounts = () => {
     enqueueSnackbar(response.data.msg, { variant: "success" });
 
     const updatedUsers = users.map((user) =>
-      user.external_id === editUser.external_id ? editUser : user
+      user.external_id === editUser.external_id ? { ...editUser, rol: roles.find((rol) => rol.external_id === editUser.external_rol)?.nombre || "" } : user,
     );
+
     setUsers(updatedUsers);
     handleEditClose();
   };
@@ -240,7 +239,7 @@ const UserAccounts = () => {
     setEditUser((prevUser) => ({
       ...prevUser,
       [name]: value,
-      rol: roles.find((rol) => rol.external_id === value)?.nombre || "",
+      rol: roles.find((rol) => rol.external_id === value)?.nombre,
     }));
   };
 
@@ -491,8 +490,8 @@ const UserAccounts = () => {
           <TextField
             name="cedula"
             label="Cedula"
-            value={newUser.cedula}
-            onChange={handleChange}
+            value={editUser.cedula}
+            onChange={handleEditChange}
             fullWidth
             margin="normal"
           />

@@ -23,7 +23,7 @@ router.post('/sensores/detener-monitoreo', auth, (req, res) => sensorControl.det
 
 //API registros
 router.get('/registros/listar/hoy', registrosControl.listar_hoy);
-router.get('/registros', registrosControl.listar);
+router.get('/registros/listar', registrosControl.listar);
 router.get('/registros/listar/fecha/:fecha', registrosControl.listar_por_fecha);
 
 module.exports = router;

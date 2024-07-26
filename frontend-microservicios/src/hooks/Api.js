@@ -31,7 +31,7 @@ const endpoints = {
     },
     registros: {
         listar_hoy: `${URL_BASE}/registros/listar/hoy`,
-        listar: `${URL_BASE}/registros`,
+        listar: `${URL_BASE}/registros/listar`,
         listar_por_fecha: `${URL_BASE}/registros/listar/fecha/`,
     },
 };
