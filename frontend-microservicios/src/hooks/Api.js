@@ -73,8 +73,8 @@ export const api_sensores = {
     ultimo_registro: async () => await axios.get(endpoints.sensores.ultimo_registro),
     actualizar: async (external_id, datos, token) => await axios.patch(endpoints.sensores.actualizar + external_id, datos, token),
     eliminar: async (external_id, token) => await axios.delete(endpoints.sensores.eliminar + external_id, { headers: { token: token }}),
-    iniciar_monitoreo: async (token) => await axios.post(endpoints.sensores.iniciar_monitoreo, { headers: { token: token }}),
-    detener_monitoreo: async (token) => await axios.post(endpoints.sensores.detener_monitoreo, { headers: { token: token }}),
+    iniciar_monitoreo: async (token) => await axios.post(endpoints.sensores.iniciar_monitoreo, {}, { headers: { token: token }}),
+    detener_monitoreo: async (token) => await axios.post(endpoints.sensores.detener_monitoreo, {}, { headers: { token: token }}),
 };
 
 export const api_registros = {
