@@ -38,7 +38,6 @@ const AuthLogin = ({ title, subtitle, subtext }: loginType) => {
   const onSubmit = async (data: any) => {
     try {
       const response = await api_cuentas.inicio_sesion(data);
-      console.log(response);
       
       if (response.data.code === 200) {
         enqueueSnackbar("Inicio de sesión exitoso", { variant: "success" });
