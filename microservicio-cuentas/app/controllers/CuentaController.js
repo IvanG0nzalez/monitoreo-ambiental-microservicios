@@ -85,13 +85,12 @@ class CuentaController {
     }
     async actualizar(message) {
         const { correo, nombre_usuario, clave, id_usuario } = message;
-        console.log(message);
         /*if (!correo && !nombre_usuario && !clave) {
             return res.status(400).json({ msg: 'Parámetros incorrectos', code: 400, datos: {} });
         }*/
 
         const cuentaAux = await cuenta.findOne({ where: { id_usuario: id_usuario } });
-        console.log(cuentaAux);
+
         if (!cuentaAux) {
             return res.status(202).json({ msg: 'Cuenta no encontrada', code: 404, datos: {} });
         }
