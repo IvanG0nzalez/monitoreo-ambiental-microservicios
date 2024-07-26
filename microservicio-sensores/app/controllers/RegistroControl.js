@@ -38,8 +38,18 @@ class RegistroControl {
             },],
             attributes: ['fecha', 'hora', 'valor_medido', 'external_id'],
         });
-        res.status(200);
-        res.json({ msg: "OK", code: 200, datos: lista });
+
+        const datos = lista.map(registro => {
+            return {
+                fecha: registro.fecha,
+                hora: registro.hora,
+                valor_medido: registro.valor_medido,
+                external_id: registro.external_id,
+                tipo_medicion: registro.sensor.tipo_medicion,
+            };
+        });
+
+        return res.status(200).json({ msg: "OK", code: 200, datos: datos });
     }
 
     async listar_por_fecha(req, res) {
