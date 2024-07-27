@@ -111,6 +111,22 @@ const validarNivel = (sensor : string, valor: number) => {
   return { nivel, nivelBg, indicador };
 };
 
+const formatDate = (date: string) => {
+  const [year, month, day] = date.split('-');
+  return `${day}/${month}/${year}`;
+};
+
+const getUnit = (sensor: string) => {
+  if (sensor === "CO2") {
+    return "ppm";
+  } else if (sensor === "Temperatura") {
+    return "°C";
+  } else if (sensor === "Humedad") {
+    return "%";
+  }
+  return "";
+};
+
 const NivelesAulaMagna = () => {
   const [mediciones, setMediciones] = useState<Medicion[]>([]);
 
@@ -198,7 +214,7 @@ const NivelesAulaMagna = () => {
                       fontWeight: "500",
                     }}
                   >
-                    {medicion.fecha}
+                    {formatDate(medicion.fecha)}
                   </Typography>
                 </TableCell>
                 <TableCell>
@@ -209,7 +225,7 @@ const NivelesAulaMagna = () => {
                       fontWeight: "500",
                     }}
                   >
-                    {medicion.hora}
+                    {medicion.hora.slice(0, 5)}
                   </Typography>
                 </TableCell>
                 <TableCell>
@@ -240,7 +256,7 @@ const NivelesAulaMagna = () => {
                   </Typography>
                 </TableCell>
                 <TableCell align="right">
-                  <Typography variant="h6">{medicion.valor_medido}</Typography>
+                  <Typography variant="h6">{`${medicion.valor_medido} ${getUnit(medicion.sensor)}`}</Typography>
                 </TableCell>
               </TableRow>
             ))}

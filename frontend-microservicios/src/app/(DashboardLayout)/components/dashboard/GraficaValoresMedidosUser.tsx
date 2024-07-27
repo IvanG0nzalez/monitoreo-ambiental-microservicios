@@ -17,7 +17,7 @@ const formatDate = (date: string) => {
     return `${day}/${month}/${year}`;
 };
 
-const GraficaValoresMedidos = () => {
+const GraficaValoresMedidosUser = () => {
     const token = getToken();
     const { enqueueSnackbar } = useSnackbar();
     const [registros, setRegistros] = useState<any>([
@@ -46,11 +46,9 @@ const GraficaValoresMedidos = () => {
                 const co2 = datos.filter((registro: any) => registro.tipo_medicion === "CO2");
                 const temperatura = datos.filter((registro: any) => registro.tipo_medicion === "Temperatura");
                 const humedad = datos.filter((registro: any) => registro.tipo_medicion === "Humedad");
-
-                console.log(datos);
                 
-
-                setRegistros(datos);                
+                
+                setRegistros(datos);
                 setRegistrosCO2(co2);
                 setRegistrosTemperatura(temperatura);
                 setRegistrosHumedad(humedad);
@@ -104,24 +102,7 @@ const GraficaValoresMedidos = () => {
             fontFamily: "'Plus Jakarta Sans', sans-serif;",
             foreColor: '#adb0bb',
             toolbar: {
-                show: true,
-                export: {
-                    csv: {
-                        filename: `Mediciones-${medida}`,
-                        columnDelimiter: ';',
-                        headerCategory: 'Hora',
-                        headerValue: 'Value',
-                        dateFormatter(timestamp: number) {
-                            return new Date(timestamp).toDateString();
-                        }
-                    },
-                    svg: {
-                        filename: `Mediciones-${medida}`,
-                    },
-                    png: {
-                        filename: `Mediciones-${medida}`,
-                    },
-                }
+                show: false,
             },
             height: 370,
             animations: {
@@ -155,12 +136,13 @@ const GraficaValoresMedidos = () => {
         },
         dataLabels: {
             enabled: false,
+
         },
         legend: {
             show: false,
         },
         grid: {
-            borderColor: 'rgba(0,0,0,0.5)',
+            borderColor: 'rgba(0, 0, 0, 0.5)',
             strokeDashArray: 1,
             xaxis: {
                 lines: {
@@ -182,7 +164,7 @@ const GraficaValoresMedidos = () => {
             },
             labels: {
                 rotate: 270,
-            }
+            },
         },
         tooltip: {
             theme: 'dark',
@@ -219,11 +201,12 @@ const GraficaValoresMedidos = () => {
                 options={optionsColumnChart}
                 series={chartData}
                 type="area"
-                height={370} 
+                height={450} 
                 width={"100%"}
+                animate={true}
             />
         </DashboardCard>
     );
 };
 
-export default GraficaValoresMedidos;
+export default GraficaValoresMedidosUser;

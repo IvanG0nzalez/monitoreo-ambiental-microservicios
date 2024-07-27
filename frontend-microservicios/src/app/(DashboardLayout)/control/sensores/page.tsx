@@ -221,7 +221,7 @@ const SensorDisplayPage = () => {
   };
 
   return (
-    <PageContainer title="Sensor" description="Vista de Sensores">
+    <PageContainer title="Sensores" description="Vista de Sensores">
       <DashboardCard title="Sensores">
         <Grid container spacing={3} justifyContent="center">
           <Grid item xs={12}>

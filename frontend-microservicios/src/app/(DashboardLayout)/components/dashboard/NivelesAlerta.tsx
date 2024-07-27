@@ -91,12 +91,16 @@ const getIconAndColor = (nivel?: string) => {
 
 }
 
+const formatDate = (date: string) => {
+  const [year, month, day] = date.split('-');
+  return `${day}/${month}/${year}`;
+};
+
 const NivelesAlerta = () => {
   const [medicion, setMedicion] = useState<Medicion[]>([]);
 
   // chart color
   const theme = useTheme();
-  const danger = theme.palette.error.main;
 
   useEffect(() => {
     const fetchRegistro = async () => {
@@ -132,7 +136,7 @@ const NivelesAlerta = () => {
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
           <Typography variant="h5">Alerta de Nivel de Aire</Typography>
           {medicion.length > 0 && (
-            <Typography variant="h6" fontWeight="300">{medicion[0].fecha}</Typography>
+            <Typography variant="h6" fontWeight="300">{formatDate(medicion[0].fecha)}</Typography>
           )}
         </Box>
         <Grid container spacing={5}>
