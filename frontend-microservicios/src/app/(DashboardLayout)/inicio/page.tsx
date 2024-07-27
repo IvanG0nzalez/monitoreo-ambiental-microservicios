@@ -8,6 +8,7 @@ import NivelesAulaMagna from "@/app/(DashboardLayout)/components/dashboard/Nivel
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { getToken } from "@/hooks/SessionUtils";
+import DescargarDatosHistoricos from "../components/dashboard/DescargarDatosHistoricos";
 
 const Dashboard = () => {
   const router = useRouter();
@@ -20,11 +21,14 @@ const Dashboard = () => {
   }, []);
 
   return (
-    <PageContainer title="Dashboard" description="this is Dashboard">
+    <PageContainer title="Inicio" description="Vista de Inicio">
       <Box>
         <Grid container spacing={3}>
           <Grid item xs={12}>
             <GraficaValoresMedidos />
+          </Grid>
+          <Grid item xs={12}>
+            <DescargarDatosHistoricos />
           </Grid>
           <Grid item xs={12}>
             <NivelesAulaMagna />
