@@ -23,22 +23,45 @@ class RegistroControl {
             attributes: ['fecha', 'hora', 'valor_medido', 'external_id'],
         });
 
-        const datos = lista.map(registro => {
-            return {
-                fecha: registro.fecha,
-                hora: registro.hora,
-                valor_medido: registro.valor_medido,
-                external_id: registro.external_id,
-                tipo_medicion: registro.sensor.tipo_medicion,
-            };
-        });
+        if (lista.length !== 0) {
+            const datos = lista.map(registro => {
+                return {
+                    fecha: registro.fecha,
+                    hora: registro.hora,
+                    valor_medido: registro.valor_medido,
+                    external_id: registro.external_id,
+                    tipo_medicion: registro.sensor.tipo_medicion,
+                };
+            });
 
-        if (lista.length === 0) {
-            res.status(200);
-            res.json({ msg: "OK", tag: "No existen registros el día de hoy", datos: datos });
+            return res.status(200).json({ msg: "Registros cargados correctamente", code: 200, datos: datos });
         } else {
-            res.status(200);
-            res.json({ msg: "OK", code: 200, datos: datos });
+            const fechaAyer = new Date(fecha_hora_utc + offset - 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+
+            lista = await registros.findAll({
+                where: { fecha: fechaAyer },
+                include: [{
+                    model: models.sensor, as: "sensor",
+                    attributes: ['alias', 'cadena_conexion', 'tipo_medicion', 'external_id'],
+                },],
+                attributes: ['fecha', 'hora', 'valor_medido', 'external_id'],
+            });
+
+            const datos = lista.map(registro => {
+                return {
+                    fecha: registro.fecha,
+                    hora: registro.hora,
+                    valor_medido: registro.valor_medido,
+                    external_id: registro.external_id,
+                    tipo_medicion: registro.sensor.tipo_medicion,
+                };
+            });
+
+            if (lista.length === 0) {
+                return res.status(200).json({ msg: "No existen registros de los últimos dos días", datos: datos });
+            } else {
+                return res.status(200).json({ msg: "No existen registros de hoy, se muestran registros de ayer", code: 202, datos: datos });
+            }
         }
     }
 
@@ -76,7 +99,7 @@ class RegistroControl {
         });
         if (lista.length === 0) {
             res.status(200);
-            res.json({ msg: "OK", tag: "No existen registros de la fecha " + fecha, datos: lista });
+            res.json({ msg:"No existen registros de la fecha " + fecha, datos: lista });
         } else {
             res.status(200);
             res.json({ msg: "OK", code: 200, datos: lista });
@@ -87,18 +110,18 @@ class RegistroControl {
         const { fecha_inicio, fecha_fin } = req.params;
 
         if (!fecha_inicio || !fecha_fin) {
-            return res.status(400).json({ msg: "Fechas no proporcionadas", code: 400 });
+            return res.status(202).json({ msg: "Fechas no proporcionadas", code: 400 });
         }
 
         const inicio = new Date(fecha_inicio);
         const fin = new Date(fecha_fin);
 
         if (isNaN(inicio.getTime()) || isNaN(fin.getTime())) {
-            return res.status(400).json({ msg: "Formato de fecha inválido", code: 400 });
+            return res.status(202).json({ msg: "Formato de fecha inválido", code: 400 });
         }
 
         if (inicio > fin) {
-            return res.status(400).json({ msg: "La fecha de inicio no puede ser después de la fecha de fin", code: 400 });
+            return res.status(202).json({ msg: "La fecha de inicio no puede ser después de la fecha de fin", code: 400 });
         }
 
         try {
@@ -130,7 +153,7 @@ class RegistroControl {
             }
         } catch (error) {
             console.error(`Error al listar registros entre fechas: ${error.message}`);
-            res.status(500).json({ msg: "Error interno del servidor", code: 500 });
+            res.status(202).json({ msg: "Error interno del servidor", code: 500 });
         }
     }
 
