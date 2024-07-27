@@ -81,4 +81,5 @@ export const api_registros = {
     listar_hoy: async (token) => await axios.get(endpoints.registros.listar_hoy, { headers: { token: token }}),
     listar: async (token) => await axios.get(endpoints.registros.listar, { headers: { token: token }}),
     listar_por_fecha: async (fecha, token) => await axios.get(endpoints.registros.listar_por_fecha + fecha, { headers: { token: token }}),
+    listar_entre_fechas: async (fecha_inicio, fecha_fin, token) => await axios.get(endpoints.registros.listar + '/' + fecha_inicio + '/' + fecha_fin, { headers: { token: token }}),
 };
