@@ -16,6 +16,7 @@ router.get('/usuarios/:external_id', auth, usuarioControl.obtener);
 router.post('/usuarios/crear', usuarioControl.crear);
 router.patch('/usuarios/actualizar/:external_id', auth, usuarioControl.actualizar);
 router.delete('/usuarios/eliminar/:external_id', auth, usuarioControl.eliminar);
+router.get('/usuarios/validar/:external_id', auth, usuarioControl.es_admin);
 
 
 // Endpoints de roles

@@ -25,5 +25,6 @@ router.post('/sensores/detener-monitoreo', auth, (req, res) => sensorControl.det
 router.get('/registros/listar/hoy', registrosControl.listar_hoy);
 router.get('/registros/listar', registrosControl.listar);   
 router.get('/registros/listar/fecha/:fecha', registrosControl.listar_por_fecha);
+router.get('/registros/listar/:fecha_inicio/:fecha_fin', registrosControl.listar_entre_fechas);
 
 module.exports = router;
