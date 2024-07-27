@@ -21,12 +21,23 @@ class RegistroControl {
             },],
             attributes: ['fecha', 'hora', 'valor_medido', 'external_id'],
         });
+
+        const datos = lista.map(registro => {
+            return {
+                fecha: registro.fecha,
+                hora: registro.hora,
+                valor_medido: registro.valor_medido,
+                external_id: registro.external_id,
+                tipo_medicion: registro.sensor.tipo_medicion,
+            };
+        });
+
         if (lista.length === 0) {
             res.status(200);
-            res.json({ msg: "OK", tag: "No existen registros el día de hoy", datos: lista });
+            res.json({ msg: "OK", tag: "No existen registros el día de hoy", datos: datos });
         } else {
             res.status(200);
-            res.json({ msg: "OK", code: 200, datos: lista });
+            res.json({ msg: "OK", code: 200, datos: datos });
         }
     }
 
