@@ -80,6 +80,34 @@ class UsuarioController {
         return res.status(200).json({ msg: 'Usuario encontrado', code: 200, datos: usuario_obtenido });
     }
 
+    async es_admin(req, res) {
+        const { external_id } = req.params;
+
+        if (!external_id) {
+            return res.status(202).json({ msg: 'Parámetros incorrectos', code: 400, datos: {} });
+        }
+
+        const usuario_obtenido = await usuario.findOne({
+            where: { external_id: external_id },
+            attributes: ['cedula', 'nombres', 'apellidos', 'external_id'],
+            include: [{
+                model: rol,
+                as: 'rol',
+                attributes: ['nombre', 'external_id']
+            }]
+        });
+
+        if (!usuario_obtenido) {
+            return res.status(202).json({ msg: 'Usuario no encontrado', code: 404, datos: {} });
+        }
+
+        if (usuario_obtenido.rol.nombre === 'Administrador') {
+            return res.status(200).json({ msg: 'Usuario es administrador', code: 200, datos: true });
+        }
+
+        return res.status(200).json({ msg: 'Usuario no es administrador', code: 200, datos: false });
+    }
+
     async crear(req, res) {
         const { correo, nombre_usuario, clave, cedula, nombres, apellidos, external_rol } = req.body;
         if (!correo || !nombre_usuario || !clave || !external_rol || !cedula) {
