@@ -10,6 +10,7 @@ var apiRouter = require('./routes/api');
 const models = require('./app/models');
 const { connect, consumeMessage } = require('./app/rabbitmq');
 const cors = require('cors');
+const init = require('./scripts/init');
 
 var app = express();
 
@@ -30,7 +31,7 @@ app.use('/api', apiRouter);
 models.sequelize.sync().then(async () =>{
   console.log('\x1b[33m%s\x1b[0m', "Se sincronizaron los modelos");
   await connect();
-
+  init();
 }).catch(err => {
   console.log(err,"ERROR!");
 });
