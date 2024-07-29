@@ -14,6 +14,7 @@ import {
   Select,
   MenuItem,
   Box,
+  Skeleton,
 } from "@mui/material";
 import PageContainer from "@/app/(DashboardLayout)/components/container/PageContainer";
 import BlankCard from "@/app/(DashboardLayout)/components/shared/BlankCard";
@@ -30,7 +31,7 @@ import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { getToken } from "@/hooks/SessionUtils";
 import DashboardCard from "../../components/shared/DashboardCard";
-import { api_sensores } from "@/hooks/Api";
+import { api_sensores, api_usuarios } from "@/hooks/Api";
 import { useSnackbar } from "notistack";
 
 interface Sensor {
@@ -45,7 +46,10 @@ const SensorDisplayPage = () => {
   const token = getToken();
   const { enqueueSnackbar } = useSnackbar();
 
+  const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
   const [sensors, setSensors] = useState<Sensor[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [noData, setNoData] = useState(true);
 
   const [newSensor, setNewSensor] = useState<Sensor>({
     alias: "",
@@ -70,19 +74,58 @@ const SensorDisplayPage = () => {
     if (!token) {
       router.push("/");
     }
-  }, []);
+  }, [token, router]);
+
+  useEffect(() => {
+    const checkAdminStatus = async () => {
+      try {
+        const response = await api_usuarios.validar_admin(token);
+        if (response.data.code === 200) {
+          setIsAdmin(response.data.datos);
+        } else {
+          setIsAdmin(false);
+        }
+      } catch (error) {
+        setIsAdmin(false);
+      }
+
+    };
+    checkAdminStatus();
+
+  }, [token]);
+
+  useEffect(() => {
+    if (isAdmin === false) {
+      router.back();
+    }
+  }, [isAdmin, router]);
+
 
   useEffect(() => {
     const fetchSensors = async () => {
-      const response = await api_sensores.listar(token);
-      if (response.data.code !== 200) {
-        enqueueSnackbar(response.data.msg, { variant: "error" });
+      try {
+        const response = await api_sensores.listar(token);
+        if (response.data.code !== 200) {
+          enqueueSnackbar(response.data.msg, { variant: "error" });
+          return;
+        }
+        setSensors(response.data.datos);
+        setLoading(false);
+        
+        if (response.data.datos.length === 0) {
+          enqueueSnackbar(response.data.msg, { variant: "info" });
+          setNoData(true);
+        } else {
+          setNoData(false);
+        }
+      } catch (error) {
+        console.error("Error al obetener los sensores", error);
+        setLoading(false);
         return;
       }
-      setSensors(response.data.datos);
     };
     fetchSensors();
-  }, [token]);
+  }, [token, enqueueSnackbar]);
 
   const handleCreateOpen = () => {
     setCreateOpen(true);
@@ -146,6 +189,7 @@ const SensorDisplayPage = () => {
       ...newSensor,
       external_id: response.data.datos.external_id,
     };
+    setNoData(false);
     setSensors([...sensors, sensorToAdd]);
     setNewSensor({
       alias: "",
@@ -204,6 +248,7 @@ const SensorDisplayPage = () => {
 
     const updatedSensors = sensors.filter((sensor) => sensor.external_id !== sensorToDelete);
     setSensors(updatedSensors);
+    setNoData(true);
     setDeleteOpen(false);
   };
 
@@ -241,6 +286,7 @@ const SensorDisplayPage = () => {
                   color="success"
                   startIcon={<PlayCircleFilledWhiteIcon />}
                   onClick={handleIniciarMonioreo}
+                  disabled={loading || noData}
                 >
                   Iniciar monitoreo
                 </Button>
@@ -250,45 +296,64 @@ const SensorDisplayPage = () => {
                   color="error"
                   startIcon={<StopCircleIcon />}
                   onClick={handleDetenerMonitoreo}
+                  disabled={loading || noData}
                 >
                   Detener monitoreo
                 </Button>
               </Box>
             </Box>
           </Grid>
-          {sensors.map((sensor) => (
-            <Grid item key={sensor.external_id} xs={12} sm={6} md={4} lg={3}>
-              <BlankCard>
-                <Box display="flex" justifyContent="space-between" alignItems="center">
-                  <CardContent>
-                    <Typography variant="h6">{sensor.alias}</Typography>
+          {loading ? (
+            Array.from({ length: 3 }).map((_, index) => (
+              <Grid item key={index} xs={12} sm={6} md={4} lg={3}>
+                <BlankCard>
 
-                    <Typography variant="body1" color="textSecondary">
-                      Tipo: {sensor.tipo_medicion}
-                    </Typography>
+                  <CardContent>
+                    <Box display="flex" justifyContent="end">
+                      <Skeleton variant="circular" width={40} height={40} />
+                    </Box>
+                    <Skeleton variant="text" height={40} />
+                    <Skeleton variant="text" height={20} width="80%" />
                   </CardContent>
 
-                  <Box alignSelf="flex-start">{getSensorIcon(sensor.tipo_medicion)}</Box>
-                </Box>
+                </BlankCard>
+              </Grid>
+            ))
+          ) : (
+            sensors.map((sensor) => (
+              <Grid item key={sensor.external_id} xs={12} sm={6} md={4} lg={3}>
+                <BlankCard>
+                  <Box display="flex" justifyContent="space-between" alignItems="center">
+                    <CardContent>
+                      <Typography variant="h6">{sensor.alias}</Typography>
 
-                <Box display="flex" alignItems="right" alignContent="end" justifyContent="end">
-                  <IconButton
-                    color="warning"
-                    onClick={() => handleEditOpen(sensor)}
-                  >
-                    <EditIcon />
-                  </IconButton>
+                      <Typography variant="body1" color="textSecondary">
+                        Tipo: {sensor.tipo_medicion}
+                      </Typography>
+                    </CardContent>
 
-                  <IconButton
-                    color="error"
-                    onClick={() => handleDeleteOpen(sensor.external_id)}
-                  >
-                    <DeleteIcon />
-                  </IconButton>
-                </Box>
-              </BlankCard>
-            </Grid>
-          ))}
+                    <Box alignSelf="flex-start">{getSensorIcon(sensor.tipo_medicion)}</Box>
+                  </Box>
+
+                  <Box display="flex" alignItems="right" alignContent="end" justifyContent="end">
+                    <IconButton
+                      color="warning"
+                      onClick={() => handleEditOpen(sensor)}
+                    >
+                      <EditIcon />
+                    </IconButton>
+
+                    <IconButton
+                      color="error"
+                      onClick={() => handleDeleteOpen(sensor.external_id)}
+                    >
+                      <DeleteIcon />
+                    </IconButton>
+                  </Box>
+                </BlankCard>
+              </Grid>
+            ))
+          )}
         </Grid>
       </DashboardCard>
 
