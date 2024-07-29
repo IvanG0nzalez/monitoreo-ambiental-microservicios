@@ -2,6 +2,8 @@
 import React from 'react';
 import { TouchableOpacity, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import Chatbot from '../utils/chatbot';
+
 
 const ChatButton = ({ onPress }) => {
   return (
