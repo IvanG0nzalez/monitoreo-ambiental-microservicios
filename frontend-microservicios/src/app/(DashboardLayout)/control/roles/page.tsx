@@ -17,6 +17,7 @@ import {
   TextField,
   Select,
   MenuItem,
+  Skeleton,
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import EditIcon from "@mui/icons-material/Edit";
@@ -34,12 +35,14 @@ interface Rol {
   external_id: string,
 }
 
-const UserAccounts = () => {
+const Roles = () => {
   const router = useRouter();
   const token = getToken();
   const { enqueueSnackbar } = useSnackbar();
 
+  const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
   const [roles, setRoles] = useState<Rol[]>([]);
+  const [loading, setLoading] = useState(true);
 
   const [newRole, setNewRole] = useState<Rol>({
     nombre: "",
@@ -53,26 +56,52 @@ const UserAccounts = () => {
     if (!token) {
       router.push("/");
     }
-  }, []);
+  }, [token, router]);
+
+  useEffect(() => {
+    const checkAdminStatus = async () => {
+      try {
+        const response = await api_usuarios.validar_admin(token);
+        if (response.data.code === 200) {
+          setIsAdmin(response.data.datos);
+        } else {
+          setIsAdmin(false);
+        }
+      } catch (error) {
+        setIsAdmin(false);
+      }
+
+    };
+    checkAdminStatus();
+
+  }, [token]);
+
+  useEffect(() => {
+    if (isAdmin === false) {
+      router.back();
+    }
+  }, [isAdmin, router]);
 
   useEffect(() => {
     const fetchRoles = async () => {
       try {
         const response = await api_roles.listar(token);
-  
+
         if (response.data.code !== 200) {
           enqueueSnackbar(response.data.msg, { variant: "error" });
           return;
         }
 
         setRoles(response.data.datos);
-
+        setLoading(false);
       } catch (error) {
         enqueueSnackbar("Hubo un error inesperado.", { variant: "error" });
+        setLoading(false);
+        return;
       }
     };
     fetchRoles();
-  }, [token]);
+  }, [token, enqueueSnackbar]);
 
   const handleCreateOpen = () => {
     setCreateOpen(true);
@@ -84,9 +113,9 @@ const UserAccounts = () => {
 
 
   const handleAddRole = async () => {
-    
+
     const response = await api_roles.crear(newRole, token);
-    
+
     if (response.data.code !== 201) {
       enqueueSnackbar(response.data.msg, { variant: "error" });
       return;
@@ -108,10 +137,10 @@ const UserAccounts = () => {
     handleCreateClose();
   };
 
- 
+
   const handleChange = (e: { target: { name: any; value: any } }) => {
     const { name, value } = e.target;
-    
+
     setNewRole((prevUser) => ({
       ...prevUser,
       [name]: value,
@@ -124,7 +153,7 @@ const UserAccounts = () => {
       description="Vista de Roles"
     >
       <DashboardCard title="Roles">
-        <Box sx={{ overflow: "auto", width: "100%" }}>
+        <>
           <Button
             variant="contained"
             startIcon={<AddIcon />}
@@ -132,43 +161,59 @@ const UserAccounts = () => {
           >
             Crear rol
           </Button>
-          <Table aria-label="simple table" sx={{ whiteSpace: "nowrap", mt: 2 }}>
-            <TableHead>
-              <TableRow>
-                <TableCell>
-                  <Typography variant="subtitle2" fontWeight={600}>
-                    Número
-                  </Typography>
-                </TableCell>
+          <Box sx={{ overflow: "auto", display: "flex", justifyContent: "center" }}>
+            <Box sx={{ width: { xs: "100%", sm:"45%" , md: "35%", lg:"25%" } }}>
+              <Table aria-label="simple table" sx={{ whiteSpace: "nowrap", mt: 2 }}>
+                <TableHead>
+                  <TableRow>
+                    <TableCell align="center">
+                      <Typography variant="subtitle2" fontWeight={600}>
+                        Número
+                      </Typography>
+                    </TableCell>
 
-                <TableCell>
-                  <Typography variant="subtitle2" fontWeight={600}>
-                    Nombre
-                  </Typography>
-                </TableCell>
+                    <TableCell align="center">
+                      <Typography variant="subtitle2" fontWeight={600}>
+                        Nombre
+                      </Typography>
+                    </TableCell>
 
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {roles.map((role, index) => (
-                <TableRow key={role.external_id}>
-                  <TableCell>
-                    <Typography variant="body1" color="textSecondary">
-                      {index + 1}
-                    </Typography>
-                  </TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {loading ? (
+                    Array.from({ length: 4 }).map((_, index) => (
+                      <TableRow key={index} >
+                        {Array.from({ length: 2 }).map((_, index) => (
+                          <TableCell key={index}>
+                            <Skeleton variant="text" width="100%" height={30} />
+                          </TableCell>
+                        ))}
+                      </TableRow>
+                    ))
+                  ) : (
+                    roles.map((role, index) => (
+                      <TableRow key={role.external_id}>
+                        <TableCell>
+                          <Typography variant="body1" color="textSecondary">
+                            {index + 1}
+                          </Typography>
+                        </TableCell>
 
-                  <TableCell>
-                    <Typography variant="body1" color="textSecondary">
-                      {role.nombre}
-                    </Typography>
-                  </TableCell>
+                        <TableCell>
+                          <Typography variant="body1" color="textSecondary">
+                            {role.nombre}
+                          </Typography>
+                        </TableCell>
 
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </Box>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            </Box>
+          </Box>
+        </>
       </DashboardCard>
 
       <Dialog open={createOpen} onClose={handleCreateClose}>
@@ -196,4 +241,4 @@ const UserAccounts = () => {
   );
 };
 
-export default UserAccounts;
+export default Roles;
