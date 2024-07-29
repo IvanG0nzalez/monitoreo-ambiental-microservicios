@@ -57,14 +57,10 @@ class UsuarioController {
 
 
     async obtener(req, res) {
-        const { external_id } = req.params;
-
-        if (!external_id) {
-            return res.status(202).json({ msg: 'Parámetros incorrectos', code: 400, datos: {} });
-        }
+        const id_usuario = req.id_usuario;
 
         const usuario_obtenido = await usuario.findOne({
-            where: { external_id: external_id },
+            where: { id: id_usuario },
             attributes: ['cedula', 'nombres', 'apellidos', 'external_id'],
             include: [{
                 model: rol,
@@ -81,14 +77,9 @@ class UsuarioController {
     }
 
     async es_admin(req, res) {
-        const { external_id } = req.params;
-
-        if (!external_id) {
-            return res.status(202).json({ msg: 'Parámetros incorrectos', code: 400, datos: {} });
-        }
-
+        const id_usuario = req.id_usuario;
         const usuario_obtenido = await usuario.findOne({
-            where: { external_id: external_id },
+            where: { id: id_usuario },
             attributes: ['cedula', 'nombres', 'apellidos', 'external_id'],
             include: [{
                 model: rol,
