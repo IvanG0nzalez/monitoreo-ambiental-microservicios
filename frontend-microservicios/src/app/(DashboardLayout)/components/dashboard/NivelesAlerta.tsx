@@ -1,7 +1,7 @@
 import dynamic from "next/dynamic";
 const Chart = dynamic(() => import("react-apexcharts"), { ssr: false });
 import { useTheme } from '@mui/material/styles';
-import { Grid, Stack, Typography, Avatar, Box } from '@mui/material';
+import { Grid, Stack, Typography, Avatar, Box, Skeleton } from '@mui/material';
 import { IconCircleX, IconExclamationCircle, IconCircleCheck, IconInfoCircle, IconCircleMinus } from '@tabler/icons-react';
 
 import DashboardCard from '@/app/(DashboardLayout)/components/shared/DashboardCard';
@@ -98,32 +98,42 @@ const formatDate = (date: string) => {
 
 const NivelesAlerta = () => {
   const [medicion, setMedicion] = useState<Medicion[]>([]);
-
+  const [loading, setLoading] = useState<boolean>(true);
+  const [noData, setNoData] = useState<boolean>(true);
   // chart color
   const theme = useTheme();
 
   useEffect(() => {
     const fetchRegistro = async () => {
-      const response = await api_sensores.ultimo_registro();
+      try {
+        const response = await api_sensores.ultimo_registro();
 
-      const datos = response.data.datos;
+        const datos = response.data.datos;
 
-      const medicionesmap = datos.map((medicion: any) => {
-        const { nivel, nivelBg, indicador } = validarNivel(medicion.registro_climatico[0].valor_medido);
-        return {
-          fecha: medicion.registro_climatico[0].fecha,
-          hora: medicion.registro_climatico[0].hora,
-          sensor: medicion.tipo_medicion,
-          nivel,
-          nivelBg,
-          indicador,
-          valor_medido: medicion.registro_climatico[0].valor_medido,
-        };
-      });
+        const medicionesmap = datos.map((medicion: any) => {
+          const { nivel, nivelBg, indicador } = validarNivel(medicion.registro_climatico[0].valor_medido);
+          return {
+            fecha: medicion.registro_climatico[0].fecha,
+            hora: medicion.registro_climatico[0].hora,
+            sensor: medicion.tipo_medicion,
+            nivel,
+            nivelBg,
+            indicador,
+            valor_medido: medicion.registro_climatico[0].valor_medido,
+          };
+        });
 
-      const medicion = medicionesmap.filter((medicion: any) => medicion.sensor === "CO2");
+        const medicion = medicionesmap.filter((medicion: any) => medicion.sensor === "CO2");
 
-      setMedicion(medicion);
+        setMedicion(medicion);
+        setLoading(false);
+        setNoData(medicion.length === 0);
+      } catch (error) {
+        console.error("Error al obtener los registros", error);
+        setLoading(false);
+        setNoData(true);
+        return;
+      }
     };
     fetchRegistro();
   }, []);
@@ -135,24 +145,48 @@ const NivelesAlerta = () => {
       <>
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
           <Typography variant="h5">Alerta de Nivel de Aire</Typography>
-          {medicion.length > 0 && (
-            <Typography variant="h6" fontWeight="300">{formatDate(medicion[0].fecha)}</Typography>
+          {loading || noData ? (
+            <Skeleton variant="text" width={100} height={30}/>
+          ) : (
+            medicion.length > 0 && (
+              <Typography variant="h6" fontWeight="300">{formatDate(medicion[0].fecha)}</Typography>
+            )
           )}
         </Box>
         <Grid container spacing={5}>
           <Grid item xs={7} sm={7}>
-            <Typography variant="h3" fontWeight="700" mb={2}>
-              Calidad: {medicion.length > 0 && medicion[0].indicador}
-            </Typography>
-            <Typography variant="h6" fontWeight="300" mb={2}>
-              Hora: {medicion.length > 0 && medicion[0].hora.slice(0, 5)}
-            </Typography>
+            <Stack direction="row" spacing={2} mt={1} alignItems="center">
+              <Typography variant="h3" fontWeight="700" mb={2}>
+                Calidad:
+              </Typography>
+              {loading || noData ? (
+                <Skeleton variant="text" width={100} height={35} />
+              ) : (
+                <Typography variant="h3" fontWeight="700">
+                  {medicion[0].indicador}
+                </Typography>
+              )}
+            </Stack>
+
+            <Stack direction="row" spacing={2} mt={1}>
+              <Typography variant="h6" fontWeight="300" mb={2}>
+                Hora: 
+              </Typography>
+              {loading || noData ? (
+                <Skeleton variant="text" width={100} />
+              ) : (
+                <Typography variant="h6" fontWeight="300">
+                  {medicion[0].hora.slice(0, 5)}
+                </Typography>
+              )}
+            </Stack>
+
             <Stack direction="row" spacing={1} mt={1} alignItems="center">
               <Avatar sx={{ bgcolor: color, width: 27, height: 27 }}>
-                {icon}
+                {loading || noData ? <Skeleton variant="circular" width={27} height={27} /> : icon}
               </Avatar>
               <Typography variant="subtitle2" fontWeight="600" color={color}>
-                {medicion.length > 0 && medicion[0].nivel}
+                {loading || noData ? <Skeleton variant="text" width={100} height={30} /> : medicion[0].nivel}
               </Typography>
             </Stack>
           </Grid>
