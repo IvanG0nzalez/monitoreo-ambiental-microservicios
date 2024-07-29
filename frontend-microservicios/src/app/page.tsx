@@ -4,10 +4,10 @@ import PageContainer from "@/app/(DashboardLayout)/components/container/PageCont
 // components
 import NivelesAlerta from "@/app/(DashboardLayout)/components/dashboard/NivelesAlerta";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { getToken } from "@/hooks/SessionUtils";
-import Header from "./(DashboardLayout)/layout/header/Header";
 import GraficaValoresMedidosUser from "./(DashboardLayout)/components/dashboard/GraficaValoresMedidosUser";
+import HeaderUser from "./(DashboardLayout)/layout/header/HeaderUser";
 
 const Dashboard = () => {
   const router = useRouter();
@@ -17,22 +17,19 @@ const Dashboard = () => {
     if (!token) {
       router.push("/");
     }
-  }, []);
-
-  const [isMobileSidebarOpen, setMobileSidebarOpen] = useState(false);
-
+  }, [router, token]);
   
   return (
     <>
-    <Header toggleMobileSidebar={() => setMobileSidebarOpen(true)} />
+    <HeaderUser/>
 
     <PageContainer title="Monitoreo" description="this is Dashboard">
       <Box display="flex" justifyContent="center" m={3}>
         <Grid container spacing={3} justifyContent="center">
-          <Grid item xs={8} md={8}>
+          <Grid item xs={12} sm={12} md={12} lg={8}>
             <GraficaValoresMedidosUser />
           </Grid>
-          <Grid item xs={8} md={8}>
+          <Grid item xs={12} sm={12} md={12} lg={8}>
             <NivelesAlerta />
           </Grid>
         </Grid>
