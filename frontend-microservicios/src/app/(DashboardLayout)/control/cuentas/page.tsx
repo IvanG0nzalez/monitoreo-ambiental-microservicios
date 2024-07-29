@@ -17,6 +17,7 @@ import {
   TextField,
   Select,
   MenuItem,
+  Skeleton,
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import EditIcon from "@mui/icons-material/Edit";
@@ -28,7 +29,6 @@ import { useEffect } from "react";
 import { getToken } from "@/hooks/SessionUtils";
 import { useSnackbar } from "notistack";
 import { api_cuentas, api_roles, api_usuarios } from "@/hooks/Api";
-
 interface User {
   id?: Number,
   cedula: string,
@@ -59,8 +59,10 @@ const UserAccounts = () => {
   const token = getToken();
   const { enqueueSnackbar } = useSnackbar();
 
+  const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
   const [users, setUsers] = useState<User[]>([]);
   const [roles, setRoles] = useState<Rol[]>([]);
+  const [loading, setLoading] = useState(true);
 
   const [newUser, setNewUser] = useState<User>({
     correo: "",
@@ -95,7 +97,31 @@ const UserAccounts = () => {
     if (!token) {
       router.push("/");
     }
-  }, []);
+  }, [token, router]);
+
+  useEffect(() => {
+    const checkAdminStatus = async () => {
+      try {
+        const response = await api_usuarios.validar_admin(token);
+        if (response.data.code === 200) {
+          setIsAdmin(response.data.datos);
+        } else {
+          setIsAdmin(false);
+        }
+      } catch (error) {
+        setIsAdmin(false);
+      }
+
+    };
+    checkAdminStatus();
+
+  }, [token]);
+
+  useEffect(() => {
+    if (isAdmin === false) {
+      router.back();
+    }
+  }, [isAdmin, router]);
 
   useEffect(() => {
     const fetchUsersAndRoles = async () => {
@@ -113,7 +139,7 @@ const UserAccounts = () => {
           enqueueSnackbar(response_cuentas.data.msg, { variant: "error" });
           return;
         }
-  
+
         if (response_roles.data.code !== 200) {
           enqueueSnackbar(response_roles.data.msg, { variant: "error" });
           return;
@@ -137,16 +163,18 @@ const UserAccounts = () => {
             external_rol: user.rol.external_id,
           }
         });
-        
+
         setUsers(combinedUsers);
         setRoles(response_roles.data.datos);
-
+        setLoading(false);
       } catch (error) {
         enqueueSnackbar("Hubo un error inesperado.", { variant: "error" });
+        setLoading(false);
+        return;
       }
     };
     fetchUsersAndRoles();
-  }, [token]);
+  }, [token, enqueueSnackbar]);
 
   const handleCreateOpen = () => {
     setCreateOpen(true);
@@ -156,7 +184,7 @@ const UserAccounts = () => {
     setCreateOpen(false);
   };
 
-  const handleEditOpen = (user: User) => {    
+  const handleEditOpen = (user: User) => {
     setEditUser(user);
     setEditOpen(true);
   };
@@ -176,9 +204,9 @@ const UserAccounts = () => {
   };
 
   const handleAddUser = async () => {
-    
+
     const response = await api_usuarios.crear(newUser, token);
-    
+
     if (response.data.code !== 201) {
       enqueueSnackbar(response.data.msg, { variant: "error" });
       return;
@@ -188,7 +216,8 @@ const UserAccounts = () => {
 
     const userToAdd = {
       ...newUser,
-      external_id: response.data.datos.external_id,
+      external_id: response.data.datos,
+      clave: "",
     };
     setUsers([...users, userToAdd]);
     setNewUser({
@@ -206,9 +235,9 @@ const UserAccounts = () => {
   };
 
   const handleEditUser = async () => {
-    
+
     const response = await api_usuarios.actualizar(editUser.external_id, editUser, token);
-    
+
     if (response.data.code !== 200) {
       enqueueSnackbar(response.data.msg, { variant: "error" });
       return;
@@ -217,7 +246,7 @@ const UserAccounts = () => {
     enqueueSnackbar(response.data.msg, { variant: "success" });
 
     const updatedUsers = users.map((user) =>
-      user.external_id === editUser.external_id ? { ...editUser, rol: roles.find((rol) => rol.external_id === editUser.external_rol)?.nombre || "" } : user,
+      user.external_id === editUser.external_id ? { ...editUser, rol: roles.find((rol) => rol.external_id === editUser.external_rol)?.nombre || "", clave: "" } : user,
     );
 
     setUsers(updatedUsers);
@@ -226,7 +255,7 @@ const UserAccounts = () => {
 
   const handleChange = (e: { target: { name: any; value: any } }) => {
     const { name, value } = e.target;
-    
+
     setNewUser((prevUser) => ({
       ...prevUser,
       [name]: value,
@@ -277,42 +306,43 @@ const UserAccounts = () => {
           <Table aria-label="simple table" sx={{ whiteSpace: "nowrap", mt: 2 }}>
             <TableHead>
               <TableRow>
-                <TableCell>
+                <TableCell align="center">
                   <Typography variant="subtitle2" fontWeight={600}>
                     Cedula
                   </Typography>
                 </TableCell>
 
-                <TableCell>
+                <TableCell align="center">
                   <Typography variant="subtitle2" fontWeight={600}>
                     Correo
                   </Typography>
                 </TableCell>
 
-                <TableCell>
+                <TableCell align="center">
                   <Typography variant="subtitle2" fontWeight={600}>
                     Nombres
                   </Typography>
                 </TableCell>
 
-                <TableCell>
+                <TableCell align="center">
                   <Typography variant="subtitle2" fontWeight={600}>
                     Apellidos
                   </Typography>
                 </TableCell>
 
-                <TableCell>
+                <TableCell align="center">
                   <Typography variant="subtitle2" fontWeight={600}>
                     Usuario
                   </Typography>
                 </TableCell>
 
-                <TableCell>
+                <TableCell align="center">
                   <Typography variant="subtitle2" fontWeight={600}>
                     Rol
                   </Typography>
                 </TableCell>
-                <TableCell>
+
+                <TableCell align="center">
                   <Typography variant="subtitle2" fontWeight={600}>
                     Opciones
                   </Typography>
@@ -320,61 +350,75 @@ const UserAccounts = () => {
               </TableRow>
             </TableHead>
             <TableBody>
-              {users.map((user) => (
-                <TableRow key={user.external_id}>
-                  <TableCell>
-                    <Typography variant="body1" color="textSecondary">
-                      {user.cedula}
-                    </Typography>
-                  </TableCell>
+              {loading ? (
+                Array.from({ length: 4 }).map((_, index) => (
+                  <TableRow key={index}>
+                    {Array.from({ length: 7 }).map((_, index) => (
+                      <TableCell key={index}>
+                        <Skeleton variant="text" width="100%" height={30} />
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                ))
+              ) : (
+                users.map((user) => (
+                  <TableRow key={user.external_id}>
+                    <TableCell>
+                      <Typography variant="body1" color="textSecondary">
+                        {user.cedula}
+                      </Typography>
+                    </TableCell>
 
-                  <TableCell>
-                    <Typography variant="body1" color="textSecondary">
-                      {user.correo}
-                    </Typography>
-                  </TableCell>
+                    <TableCell>
+                      <Typography variant="body1" color="textSecondary">
+                        {user.correo}
+                      </Typography>
+                    </TableCell>
 
-                  <TableCell>
-                    <Typography variant="body1" color="textSecondary">
-                      {user.nombres}
-                    </Typography>
-                  </TableCell>
+                    <TableCell>
+                      <Typography variant="body1" color="textSecondary">
+                        {user.nombres}
+                      </Typography>
+                    </TableCell>
 
-                  <TableCell>
-                    <Typography variant="body1" color="textSecondary">
-                      {user.apellidos}
-                    </Typography>
-                  </TableCell>
+                    <TableCell>
+                      <Typography variant="body1" color="textSecondary">
+                        {user.apellidos}
+                      </Typography>
+                    </TableCell>
 
-                  <TableCell>
-                    <Typography variant="body1" color="textSecondary">
-                      {user.nombre_usuario}
-                    </Typography>
-                  </TableCell>
+                    <TableCell>
+                      <Typography variant="body1" color="textSecondary">
+                        {user.nombre_usuario}
+                      </Typography>
+                    </TableCell>
 
-                  <TableCell>
-                    <Typography variant="body1" color="textSecondary">
-                      {user.rol}
-                    </Typography>
-                  </TableCell>
+                    <TableCell>
+                      <Typography variant="body1" color="textSecondary">
+                        {user.rol}
+                      </Typography>
+                    </TableCell>
 
-                  <TableCell>
-                    <IconButton
-                      color="warning"
-                      onClick={() => handleEditOpen(user)}
-                    >
-                      <EditIcon />
-                    </IconButton>
-                    <IconButton
-                      color="error"
-                      onClick={() => handleDeleteOpen(user.external_id)}
-                      sx={{ ml: 1 }}
-                    >
-                      <DeleteIcon />
-                    </IconButton>
-                  </TableCell>
-                </TableRow>
-              ))}
+                    <TableCell align="center">
+                      <IconButton
+                        color="warning"
+                        onClick={() => handleEditOpen(user)}
+                      >
+                        <EditIcon />
+                      </IconButton>
+                      {user.cedula !== '0000000000' && (
+                        <IconButton
+                          color="error"
+                          onClick={() => handleDeleteOpen(user.external_id)}
+                          sx={{ ml: 1 }}
+                        >
+                          <DeleteIcon />
+                        </IconButton>
+                      )}
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
             </TableBody>
           </Table>
         </Box>
