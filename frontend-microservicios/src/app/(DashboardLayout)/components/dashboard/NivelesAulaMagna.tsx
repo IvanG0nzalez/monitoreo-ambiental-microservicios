@@ -7,6 +7,7 @@ import {
   TableHead,
   TableRow,
   Chip,
+  Skeleton,
 } from "@mui/material";
 import DashboardCard from "@/app/(DashboardLayout)//components/shared/DashboardCard";
 import { useEffect, useState } from "react";
@@ -23,7 +24,7 @@ interface Medicion {
   indicador?: string,
 }
 
-const validarNivel = (sensor : string, valor: number) => {
+const validarNivel = (sensor: string, valor: number) => {
   let nivel = "";
   let nivelBg = "";
   let indicador = "";
@@ -45,7 +46,7 @@ const validarNivel = (sensor : string, valor: number) => {
       nivel = "Alto";
       nivelBg = " #FFD700";
       indicador = "Aire ligeramente contaminado";
-    } else if (valor > 1500 && valor <= 2000){
+    } else if (valor > 1500 && valor <= 2000) {
       nivel = "Muy Alto";
       nivelBg = "#FFA500";
       indicador = "Aire contaminado";
@@ -80,7 +81,7 @@ const validarNivel = (sensor : string, valor: number) => {
       nivelBg = "#FF4500";
       indicador = "Temperatura peligrosa";
     }
-  } else if (sensor === "Humedad" ) {
+  } else if (sensor === "Humedad") {
     if (valor <= 20) {
       nivel = "Muy Baja";
       nivelBg = "#0000FF";
@@ -129,27 +130,37 @@ const getUnit = (sensor: string) => {
 
 const NivelesAulaMagna = () => {
   const [mediciones, setMediciones] = useState<Medicion[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [noData, setNoData] = useState(true);
+
 
   useEffect(() => {
     const fetchRegistros = async () => {
-      const response = await api_sensores.ultimo_registro();
+      try {
+        const response = await api_sensores.ultimo_registro();
 
-      const datos = response.data.datos;
+        const datos = response.data.datos;
 
-      const medicionesmap = datos.map((medicion : any) => {
-        const { nivel, nivelBg, indicador } = validarNivel(medicion.tipo_medicion, medicion.registro_climatico[0].valor_medido);
-        return {
-          fecha: medicion.registro_climatico[0].fecha,
-          hora: medicion.registro_climatico[0].hora,
-          sensor: medicion.tipo_medicion,
-          nivel,
-          nivelBg,
-          indicador,
-          valor_medido: medicion.registro_climatico[0].valor_medido,
-        };
-      });
-      
-      setMediciones(medicionesmap);
+        const medicionesmap = datos.map((medicion: any) => {
+          const { nivel, nivelBg, indicador } = validarNivel(medicion.tipo_medicion, medicion.registro_climatico[0].valor_medido);
+          return {
+            fecha: medicion.registro_climatico[0].fecha,
+            hora: medicion.registro_climatico[0].hora,
+            sensor: medicion.tipo_medicion,
+            nivel,
+            nivelBg,
+            indicador,
+            valor_medido: medicion.registro_climatico[0].valor_medido,
+          };
+        });
+
+        setMediciones(medicionesmap);
+        setLoading(false);
+        setNoData(medicionesmap.length === 0);
+      } catch (error) {
+        setLoading(false);
+        setNoData(true);
+      }
     };
     fetchRegistros();
   }, []);
@@ -166,37 +177,37 @@ const NivelesAulaMagna = () => {
         >
           <TableHead>
             <TableRow>
-              <TableCell>
+              <TableCell align="center">
                 <Typography variant="subtitle2" fontWeight={600}>
                   Fecha
                 </Typography>
               </TableCell>
 
-              <TableCell>
+              <TableCell align="center">
                 <Typography variant="subtitle2" fontWeight={600}>
                   Hora
                 </Typography>
               </TableCell>
 
-              <TableCell>
+              <TableCell align="center">
                 <Typography variant="subtitle2" fontWeight={600}>
                   Sensor
                 </Typography>
               </TableCell>
 
-              <TableCell>
+              <TableCell align="center">
                 <Typography variant="subtitle2" fontWeight={600}>
                   Nivel
                 </Typography>
               </TableCell>
 
-              <TableCell>
+              <TableCell align="center">
                 <Typography variant="subtitle2" fontWeight={600}>
                   Indicador
                 </Typography>
               </TableCell>
 
-              <TableCell align="right">
+              <TableCell align="center">
                 <Typography variant="subtitle2" fontWeight={600}>
                   Valor Medido
                 </Typography>
@@ -204,62 +215,74 @@ const NivelesAulaMagna = () => {
             </TableRow>
           </TableHead>
           <TableBody>
-            {mediciones.map((medicion, index) => (
-              <TableRow key={index + 1}>
-                <TableCell>
-                  <Typography
-                    color="textSecondary"
-                    sx={{
-                      fontSize: "15px",
-                      fontWeight: "500",
-                    }}
-                  >
-                    {formatDate(medicion.fecha)}
-                  </Typography>
-                </TableCell>
-                <TableCell>
-                  <Typography
-                    color="textSecondary"
-                    sx={{
-                      fontSize: "15px",
-                      fontWeight: "500",
-                    }}
-                  >
-                    {medicion.hora.slice(0, 5)}
-                  </Typography>
-                </TableCell>
-                <TableCell>
-                  <Typography
-                    color="textSecondary"
-                    fontWeight={400}
-                  >
-                    {medicion.sensor}
-                  </Typography>
-                </TableCell>
-                <TableCell>
-                  <Chip
-                    sx={{
-                      px: "4px",
-                      backgroundColor: medicion.nivelBg,
-                      color: "#fff",
-                    }}
-                    size="small"
-                    label={medicion.nivel}
-                  ></Chip>
-                </TableCell>
-                <TableCell>
-                  <Typography
-                    color="textSecondary"
-                    fontWeight={400}
-                  >
-                    {medicion.indicador}
-                  </Typography>
-                </TableCell>
-                <TableCell align="right">
-                  <Typography variant="h6">{`${medicion.valor_medido} ${getUnit(medicion.sensor)}`}</Typography>
-                </TableCell>
-              </TableRow>
-            ))}
+            {(loading || noData) ? (
+              Array.from({ length: 4 }).map((_, index) => (
+                <TableRow key={index}>
+                  {Array.from({ length: 6 }).map((_, index) => (
+                    <TableCell key={index}>
+                      <Skeleton variant="text" width="100%" height={30} />
+                    </TableCell>
+                  ))}
+                </TableRow>
+              ))
+            ) : (
+              mediciones.map((medicion, index) => (
+                <TableRow key={index + 1}>
+                  <TableCell>
+                    <Typography
+                      color="textSecondary"
+                      sx={{
+                        fontSize: "15px",
+                        fontWeight: "500",
+                      }}
+                    >
+                      {formatDate(medicion.fecha)}
+                    </Typography>
+                  </TableCell>
+                  <TableCell>
+                    <Typography
+                      color="textSecondary"
+                      sx={{
+                        fontSize: "15px",
+                        fontWeight: "500",
+                      }}
+                    >
+                      {medicion.hora.slice(0, 5)}
+                    </Typography>
+                  </TableCell>
+                  <TableCell>
+                    <Typography
+                      color="textSecondary"
+                      fontWeight={400}
+                    >
+                      {medicion.sensor}
+                    </Typography>
+                  </TableCell>
+                  <TableCell>
+                    <Chip
+                      sx={{
+                        px: "4px",
+                        backgroundColor: medicion.nivelBg,
+                        color: "#fff",
+                      }}
+                      size="small"
+                      label={medicion.nivel}
+                    ></Chip>
+                  </TableCell>
+                  <TableCell>
+                    <Typography
+                      color="textSecondary"
+                      fontWeight={400}
+                    >
+                      {medicion.indicador}
+                    </Typography>
+                  </TableCell>
+                  <TableCell align="right">
+                    <Typography variant="h6">{`${medicion.valor_medido} ${getUnit(medicion.sensor)}`}</Typography>
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
           </TableBody>
         </Table>
       </Box>
