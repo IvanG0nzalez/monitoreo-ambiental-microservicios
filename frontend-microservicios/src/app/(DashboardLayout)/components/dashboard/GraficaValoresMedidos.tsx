@@ -1,11 +1,15 @@
 import React, { useEffect, useState } from 'react';
-import { Select, MenuItem, easing } from '@mui/material';
+import { Select, MenuItem, easing, ListItemIcon, ListItemText, Skeleton } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import DashboardCard from '@/app/(DashboardLayout)/components/shared/DashboardCard';
 import dynamic from "next/dynamic";
 import { api_registros } from "@/hooks/Api";
 import { useSnackbar } from "notistack";
 import { getToken } from '@/hooks/SessionUtils';
+import AirIcon from "@mui/icons-material/Air";
+import ThermostatIcon from "@mui/icons-material/Thermostat";
+import OpacityIcon from "@mui/icons-material/Opacity";
+
 const Chart = dynamic(() => import("react-apexcharts"), { ssr: false });
 
 const formatDate = (date: string) => {
@@ -28,6 +32,8 @@ const GraficaValoresMedidos = () => {
     const [registrosCO2, setRegistrosCO2] = useState([]);
     const [registrosTempertura, setRegistrosTemperatura] = useState([]);
     const [registrosHumedad, setRegistrosHumedad] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [noData, setNoData] = useState(true);
     // select
     const [medida, setMedida] = React.useState('CO2');
 
@@ -36,7 +42,11 @@ const GraficaValoresMedidos = () => {
             try {
                 const response = await api_registros.listar_hoy(token);
 
-                if (response.data.code !== 200) {
+                if (response.data.code === 202) {
+                    enqueueSnackbar(response.data.msg, { variant: "info" });
+                } else if (response.data.code === 200) {
+                    enqueueSnackbar(response.data.msg, { variant: "success" });
+                } else if (response.data.code !== 200) {
                     enqueueSnackbar(response.data.msg, { variant: "error" });
                     return;
                 }
@@ -47,16 +57,18 @@ const GraficaValoresMedidos = () => {
                 const temperatura = datos.filter((registro: any) => registro.tipo_medicion === "Temperatura");
                 const humedad = datos.filter((registro: any) => registro.tipo_medicion === "Humedad");
 
-                console.log(datos);
-                
-
-                setRegistros(datos);                
+                setRegistros(datos);
                 setRegistrosCO2(co2);
                 setRegistrosTemperatura(temperatura);
                 setRegistrosHumedad(humedad);
+                setLoading(false);
+                setNoData(false);
             } catch (error) {
                 enqueueSnackbar("Error al obtener los registros", { variant: "error" });
+                setLoading(false);
                 return
+            } finally {
+                setLoading(false);
             }
         };
         fetchRegistros();
@@ -81,11 +93,11 @@ const GraficaValoresMedidos = () => {
     };
 
     const horas = registroPorTipo[medida].map((registro: any) => registro.hora.slice(0, 5));
-    
+
     const valores = registroPorTipo[medida].map((registro: any) => registro.valor_medido);
-    
-    const getUnit = (measurement: string) => {
-        switch (measurement) {
+
+    const getUnit = (medida: string) => {
+        switch (medida) {
             case 'CO2':
                 return 'ppm';
             case 'Temperatura':
@@ -202,26 +214,46 @@ const GraficaValoresMedidos = () => {
     ];
 
     return (
-        <DashboardCard title={`Valor Medidos - ${formatDate(registros[0].fecha)}`} action={
+        <DashboardCard title={`Valor Medidos - ${formatDate(registros[0]?.fecha)}`} action={
             <Select
                 labelId="measurement-dd"
                 id="measurement-dd"
                 value={medida}
                 size="small"
                 onChange={handleChange}
+                disabled={loading || noData}
             >
-                <MenuItem value="CO2">CO2</MenuItem>
-                <MenuItem value="Temperatura">Temperatura</MenuItem>
-                <MenuItem value="Humedad">Humedad</MenuItem>
+                <MenuItem value="CO2" >
+                    <ListItemIcon>
+                        <ListItemText> CO2 </ListItemText>
+                        <AirIcon fontSize='small' />
+                    </ListItemIcon>
+                </MenuItem>
+                <MenuItem value="Temperatura">
+                    <ListItemIcon>
+                        <ListItemText> Temperatura </ListItemText>
+                        <ThermostatIcon fontSize='small' />
+                    </ListItemIcon>
+                </MenuItem>
+                <MenuItem value="Humedad">
+                    <ListItemIcon>
+                        <ListItemText> Humedad </ListItemText>
+                        <OpacityIcon fontSize='small' />
+                    </ListItemIcon>
+                </MenuItem>
             </Select>
         }>
-            <Chart
-                options={optionsColumnChart}
-                series={chartData}
-                type="area"
-                height={370} 
-                width={"100%"}
-            />
+            {loading || noData ? (
+                <Skeleton variant="rectangular" width={"100%"} height={370} />
+            ) : (
+                <Chart
+                    options={optionsColumnChart}
+                    series={chartData}
+                    type="area"
+                    height={370}
+                    width={"100%"}
+                />
+            )}
         </DashboardCard>
     );
 };
