@@ -10,7 +10,7 @@ const auth = (req, res, next) => {
     const key = process.env.KEY;
     try {
         const decoded = jwt.verify(token, key);
-        req.id = decoded.external;
+        req.id_usuario = decoded.id_usuario;
         next();
     } catch (error) {
         res.status(401).json({ msg: 'Token no válido' });
