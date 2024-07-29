@@ -40,7 +40,7 @@ const AuthLogin = ({ title, subtitle, subtext }: loginType) => {
       const response = await api_cuentas.inicio_sesion(data);
       
       if (response.data.code === 200) {
-        enqueueSnackbar("Inicio de sesión exitoso", { variant: "success" });
+        enqueueSnackbar(`${response.data.msg}`, { variant: "success" });
         router.push("/inicio");
       } else {
         enqueueSnackbar(`${response.data.msg}`, { variant: "error" });
