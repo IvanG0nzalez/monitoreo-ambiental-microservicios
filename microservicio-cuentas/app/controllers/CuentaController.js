@@ -83,6 +83,7 @@ class CuentaController {
             return await sendMessage('cuenta_creada', { success: false, msg: 'Error al crear la cuenta' });
         }
     }
+    
     async actualizar(message) {
         const { correo, nombre_usuario, clave, id_usuario } = message;
         /*if (!correo && !nombre_usuario && !clave) {
@@ -184,6 +185,7 @@ class CuentaController {
 
         const token_data = {
             external: cuentaAux.external_id,
+            id_usuario: cuentaAux.id_usuario,
             check: true,
         };
 
@@ -196,7 +198,7 @@ class CuentaController {
             nombre_usuario: cuentaAux.nombre_usuario,
         };
 
-        return res.status(200).json({ msg: 'Inicio de sesión correcto', code: 200, datos: data });
+        return res.status(200).json({ msg: `Bienvenido, ${cuentaAux.nombre_usuario}`, code: 200, datos: data });
     }
 }
 
