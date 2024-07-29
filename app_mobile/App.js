@@ -70,12 +70,14 @@ function MainNavigator() {
         }}
       />
       <Drawer.Screen
-        name="Chat"
-        component={ScreenWithLayout({ component: ChatScreen, showChatButton: false })}
-        options={{
-          drawerIcon: ({ color, size }) => <Icon name="chat" color={color} size={size} />
-        }}
+      name="Chat"
+      component={ScreenWithLayout({ component: ChatScreen, showChatButton: false })}
+      options={{
+      drawerIcon: ({ color, size }) => <Icon name="chat" color={color} size={size} />,
+      }}
+
       />
+      
       <Drawer.Screen
         name="Sobre el Proyecto"
         component={ScreenWithLayout({ component: AboutProjectScreen, showChatButton: false })}
