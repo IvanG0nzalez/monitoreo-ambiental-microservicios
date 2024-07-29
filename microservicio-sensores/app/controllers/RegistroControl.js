@@ -58,7 +58,7 @@ class RegistroControl {
             });
 
             if (lista.length === 0) {
-                return res.status(200).json({ msg: "No existen registros de los últimos dos días", datos: datos });
+                return res.status(200).json({ msg: "No se han registrado datos hace más de 48 horas", datos: datos });
             } else {
                 return res.status(200).json({ msg: "No existen registros de hoy, se muestran registros de ayer", code: 202, datos: datos });
             }
@@ -139,7 +139,7 @@ class RegistroControl {
             });
 
             if (lista.length === 0) {
-                res.status(200).json({ msg: "OK", tag: "No existen registros entre esas fechas", datos: lista });
+                res.status(240).json({ msg: "No existen registros entre esas fechas", datos: lista });
             } else {
                 const datos_registro = lista.map(registro => {
                     return {
