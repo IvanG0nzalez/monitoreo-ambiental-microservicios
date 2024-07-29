@@ -18,7 +18,7 @@ const Dashboard = () => {
     if (!token) {
       router.push("/");
     }
-  }, []);
+  }, [token, router]);
 
   return (
     <PageContainer title="Inicio" description="Vista de Inicio">
