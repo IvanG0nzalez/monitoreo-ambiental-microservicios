@@ -36,7 +36,7 @@ services:
       RABBITMQ_DEFAULT_USER: ${RABBITMQ_DEFAULT_USER}
       RABBITMQ_DEFAULT_PASS: ${RABBITMQ_DEFAULT_PASS}
     volumes:
-      - rabbitmq-data:/var/lib/rabbitmq
+      - rabbitmq-data-dev:/var/lib/rabbitmq
     healthcheck:
       test: ["CMD", "rabbitmqctl", "status"]
       interval: 5s
@@ -56,6 +56,8 @@ services:
     ports:
       - "3001:3000"
     depends_on:
+      servicio-cuentas:
+        condition: service_healthy
       rabbitmq:
         condition: service_healthy
       mysql-usuarios:
@@ -81,6 +83,12 @@ services:
         condition: service_healthy
     env_file:
       - ./microservicio-cuentas/.env
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
 
   servicio-sensores:
     build:
@@ -110,7 +118,7 @@ services:
       - MYSQL_USER=${DB_USUARIOS_DEV_USERNAME}
       - MYSQL_PASSWORD=${DB_USUARIOS_DEV_PASSWORD}
     volumes:
-      - mysql-usuarios-data:/var/lib/mysql
+      - mysql-usuarios-data-dev:/var/lib/mysql
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "--silent"]
       interval: 5s
@@ -129,7 +137,7 @@ services:
       - MYSQL_USER=${DB_CUENTAS_DEV_USERNAME}
       - MYSQL_PASSWORD=${DB_CUENTAS_DEV_PASSWORD}
     volumes:
-      - mysql-cuentas-data:/var/lib/mysql
+      - mysql-cuentas-data-dev:/var/lib/mysql
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "--silent"]
       interval: 5s
@@ -148,7 +156,7 @@ services:
       - MYSQL_USER=${DB_SENSORES_DEV_USERNAME}
       - MYSQL_PASSWORD=${DB_SENSORES_DEV_PASSWORD}
     volumes:
-      - mysql-sensores-data:/var/lib/mysql
+      - mysql-sensores-data-dev:/var/lib/mysql
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "--silent"]
       interval: 5s
@@ -157,7 +165,7 @@ services:
       start_period: 5s
    
 volumes:
-  mysql-usuarios-data:
-  mysql-cuentas-data:
-  mysql-sensores-data:
-  rabbitmq-data:
+  mysql-usuarios-data-dev:
+  mysql-cuentas-data-dev:
+  mysql-sensores-data-dev:
+  rabbitmq-data-dev:
