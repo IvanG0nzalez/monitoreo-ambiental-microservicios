@@ -25,35 +25,6 @@ interface StatusBoxProps {
   isMonitoring: boolean;
 }
 
-const StatusBox = styled(Box)<StatusBoxProps>(({ theme, isMonitoring }) => ({
-  display: "flex",
-  alignItems: "center",
-  padding: theme.spacing(1),
-  backgroundColor: "#e0e0e0",
-  borderRadius: theme.shape.borderRadius,
-  boxShadow: theme.shadows[1],
-  "& .icon": {
-    marginRight: theme.spacing(1),
-    animation: "glow 1.5s infinite alternate",
-  },
-  "@keyframes glow": {
-    "0%": {
-      boxShadow: isMonitoring
-        ? `0 0 5px ${theme.palette.success.main}`
-        : `0 0 5px ${theme.palette.error.main}`,
-    },
-    "100%": {
-      boxShadow: isMonitoring
-        ? `0 0 20px ${theme.palette.success.main}`
-        : `0 0 20px ${theme.palette.error.main}`,
-    },
-  },
-  "& .status-text": {
-    fontSize: "0.875rem", // adjust font size
-    lineHeight: 1.2,
-  },
-}));
-
 const Header = ({ toggleMobileSidebar }: ItemType) => {
   // const lgUp = useMediaQuery((theme) => theme.breakpoints.up('lg'));
   // const lgDown = useMediaQuery((theme) => theme.breakpoints.down('lg'));
@@ -71,38 +42,72 @@ const Header = ({ toggleMobileSidebar }: ItemType) => {
       minHeight: "70px",
     },
   }));
+
   const ToolbarStyled = styled(Toolbar)(({ theme }) => ({
     width: "100%",
     color: theme.palette.text.secondary,
   }));
 
-  useEffect(() => {
-    const checkAdminStatus = async () => {
+  const checkAdminStatus = async () => {    
+    const response = await api_usuarios.validar_admin(token);
 
-      const response = await api_usuarios.validar_admin(token);
-
-      if (response.data.code === 200) {
-        setIsAdmin(response.data.datos);
-      }
+    if (response.data.code === 200) {
+      setIsAdmin(response.data.datos);
     }
+  };
+
+  const fetchMonitoringStatus = async () => {
+    try {
+      const response = await api_sensores.estado_monitoreo(token);
+
+      setIsMonitoring(response.data.datos);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  useEffect(() => {
     checkAdminStatus();
   }, [token]);
 
   useEffect(() => {
-    const fetchMonitoringStatus = async () => {
-      try {
-        const response = await api_sensores.estado_monitoreo(token);
-
-        setIsMonitoring(response.data.datos);
-      } catch (error) {
-        console.error(error);
-      }
-    };
     fetchMonitoringStatus();
-
     const intervalId = setInterval(fetchMonitoringStatus, 3000); // Intervalo de 3 segundos para volver a hacer la petición
     return () => clearInterval(intervalId);
   }, [token]);
+
+  const StatusBox = styled(Box)<StatusBoxProps>(({ theme, isMonitoring }) => ({
+    display: "flex",
+    alignItems: "center",
+    padding: theme.spacing(1),
+    backgroundColor: "#e0e0e0",
+    borderRadius: theme.shape.borderRadius,
+    boxShadow: theme.shadows[1],
+    "& .icon": {
+      marginRight: theme.spacing(1),
+      animation: `${isMonitoring ? "glowSuccess" : "glowError"} 1.5s infinite alternate`,
+    },
+    "@keyframes glowSuccess": {
+      "0%": {
+        boxShadow: `0 0 5px ${theme.palette.success.main}`,
+      },
+      "100%": {
+        boxShadow: `0 0 20px ${theme.palette.success.main}`,
+      },
+    },
+    "@keyframes glowError": {
+      "0%": {
+        boxShadow: `0 0 5px ${theme.palette.error.main}`,
+      },
+      "100%": {
+        boxShadow: `0 0 20px ${theme.palette.error.main}`,
+      },
+    },
+    "& .status-text": {
+      fontSize: "0.875rem", // adjust font size
+      lineHeight: 1.2,
+    },
+  }));
 
   return (
     <AppBarStyled position="sticky" color="default">
