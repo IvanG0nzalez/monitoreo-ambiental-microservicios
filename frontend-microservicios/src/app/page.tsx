@@ -8,6 +8,7 @@ import { useEffect } from "react";
 import { getToken } from "@/hooks/SessionUtils";
 import GraficaValoresMedidosUser from "./(DashboardLayout)/components/dashboard/GraficaValoresMedidosUser";
 import HeaderUser from "./(DashboardLayout)/layout/header/HeaderUser";
+import Chatbot from "./chatbot/chatbot";
 
 const Dashboard = () => {
   const router = useRouter();
@@ -34,6 +35,7 @@ const Dashboard = () => {
           </Grid>
         </Grid>
       </Box>
+      <Chatbot />
     </PageContainer>
     </>
   );

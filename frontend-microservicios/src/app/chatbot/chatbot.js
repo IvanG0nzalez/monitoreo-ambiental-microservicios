@@ -1,6 +1,76 @@
 'use client';
+import { api_sensores } from '@/hooks/Api';
 import React, { useState, useRef, useEffect } from 'react';
 import stringSimilarity from 'string-similarity';
+
+const nivelDeCalidad = (tipo_medicion, valor) => {
+  let nivel = "";
+  let indicador = "";
+
+  if (tipo_medicion === "CO2") {
+    if (valor <= 400) {
+      nivel = "Bajo";
+      indicador = "El aire está muy limpio";
+    } else if (valor > 400 && valor <= 800) {
+      nivel = "Normal";
+      indicador = "El aire es aceptable";
+    } else if (valor > 800 && valor <= 1000) {
+      nivel = "Óptimo";
+      indicador = "El aire es de buena calidad";
+    } else if (valor > 1000 && valor <= 1500) {
+      nivel = "Alto";
+      indicador = "El aire está ligeramente contaminado";
+    } else if (valor > 1500 && valor <= 2000) {
+      nivel = "Muy Alto";
+      indicador = "El aire está contaminado";
+    } else {
+      nivel = "Peligroso";
+      indicador = "El aire está muy contaminado";
+    }
+  } else if (tipo_medicion === "Temperatura") {
+    if (valor <= 10) {
+      nivel = "Muy Frío";
+      indicador = "Temperatura muy baja";
+    } else if (valor > 10 && valor <= 18) {
+      nivel = "Frío";
+      indicador = "Temperatura baja";
+    } else if (valor > 18 && valor <= 24) {
+      nivel = "Óptimo";
+      indicador = "Temperatura confortable";
+    } else if (valor > 24 && valor <= 30) {
+      nivel = "Cálido";
+      indicador = "Temperatura alta";
+    } else if (valor > 30 && valor <= 35) {
+      nivel = "Muy Cálido";
+      indicador = "Temperatura muy alta";
+    } else {
+      nivel = "Peligroso";
+      indicador = "Temperatura peligrosa";
+    }
+  } else if (tipo_medicion === "Humedad") {
+    if (valor <= 20) {
+      nivel = "Muy Baja";
+      indicador = "Humedad muy baja";
+    } else if (valor > 20 && valor <= 40) {
+      nivel = "Baja";
+      indicador = "Humedad baja";
+    } else if (valor > 40 && valor <= 60) {
+      nivel = "Óptimo";
+      indicador = "Humedad ideal";
+    } else if (valor > 60 && valor <= 80) {
+      nivel = "Alta";
+      indicador = "Humedad alta";
+    } else if (valor > 80 && valor <= 95) {
+      nivel = "Muy Alta";
+      indicador = "Humedad muy alta";
+    } else {
+      nivel = "Peligroso";
+      indicador = "Humedad extremadamente alta";
+    }
+  }
+
+  return { nivel, indicador };
+};
 
 const Chatbot = () => {
   const [abierto, setAbierto] = useState(false);
@@ -11,12 +81,13 @@ const Chatbot = () => {
 
   const patrones = [
     { keys: ['hola', 'Buen dia'], respuesta: 'Hola, ¿en qué puedo ayudarte?' },
-    { keys: ['niveles de calidad', 'calidad apropiada'], respuesta: 'Según la Agencia de Protección del Medio Ambiente de EE.UU. (USEPA), los niveles aceptables relativos deben oscilar entre:<br />Humedad = 30%-60%<br />Temperatura = 20°C - 25°C<br />Dióxido de Carbono = 300ppm y 400ppm.' },
-    { keys: ['temperatura'], respuesta: obtenerDato('Temperatura') },
-    { keys: ['humedad'], respuesta: obtenerDato('Humedad') },
-    { keys: ['CO2', 'Dioxido de carbono'], respuesta: obtenerDato('CO2') },
+    { keys: ['niveles', 'apropiada'], respuesta: 'Según la Agencia de Protección del Medio Ambiente de EE.UU. (USEPA), los niveles aceptables relativos deben oscilar entre:<br />Humedad = 30%-60%<br />Temperatura = 20°C - 25°C<br />Dióxido de Carbono = 300ppm y 400ppm.' },
+    { keys: ['temperatura'], respuesta: () => obtenerDato('Temperatura') },
+    { keys: ['humedad'], respuesta: () => obtenerDato('Humedad') },
+    { keys: ['Dioxido de carbono', 'co2'], respuesta: () => obtenerDato('CO2') },
     { keys: ['Adios', 'Chao', 'Bye'], respuesta: 'Adios, ten un buen día' },
-    { keys: ['Valores obtenidos', 'Valores actuales'], respuesta: obtenerDatos() },
+    { keys: ['Valores obtenidos', 'Valores actuales'], respuesta: () => obtenerDatos() },
+    { keys: ['ambiente', 'calidad de aire', 'calidad', 'contaminación'], respuesta: () => niveldeCalidadAire('CO2') },
   ];
 
   async function obtenerTemperaturas() {
@@ -30,14 +101,14 @@ const Chatbot = () => {
       //console.error('Error al obtener la temperatura:', error);
       //return 'No se pudo obtener la temperatura actual. Por favor, intenta de nuevo más tarde.';
     //}
-  }
+  };
 
 
   async function obtenerDatos() {
     try {
       const response = await api_sensores.ultimo_registro();
       const datos = response.data.datos;
-      
+      console.log("obtener datos");
       const valoresMedidos = datos.map((medicion) => ({
         tipo: medicion.tipo_medicion,
         valor: medicion.registro_climatico[0].valor_medido
@@ -62,6 +133,25 @@ const Chatbot = () => {
       console.error('Error al obtener los datos:', error);
       return 'No se pudieron obtener los datos. Por favor, intenta de nuevo más tarde.';
     }
+  };
+
+  async function niveldeCalidadAire(tipoMedicion) {
+    try {
+      const response = await api_sensores.ultimo_registro();
+      const datos = response.data.datos;
+
+      const valormedido = datos
+        .filter((medicion) => medicion.tipo_medicion === tipoMedicion)
+        .map((medicion) => medicion.registro_climatico[0].valor_medido);
+
+      const { nivel, indicador } = nivelDeCalidad(tipoMedicion, valormedido[0]);
+
+      return `El nivel de contaminación del aire es "${nivel}". <br/> Indica que: ${indicador}.`;
+
+    } catch (error) {
+      console.error('Error al obtener los niveles de calidad:', error);
+      return 'No se pudieron obtener los niveles de calidad. Por favor, intenta de nuevo más tarde.';
+    }
   }
   
 
@@ -69,19 +159,21 @@ const Chatbot = () => {
     try {
       const response = await api_sensores.ultimo_registro();
       const datos = response.data.datos;
-      
+      console.log(datos);
       
       const valormedido = datos
         .filter((medicion) => medicion.tipo_medicion === tipoMedicion)
         .map((medicion) => medicion.registro_climatico[0].valor_medido);
-      
+
+      console.log(valormedido[0], "valor medido");
+
       if (tipoMedicion === 'CO2') {
-        return `El CO2 en el aire actual es de ${valormedido} ppm.`;
+        return `El CO2 en el aire actual es de ${valormedido[0]} ppm.`;
       } else  if (tipoMedicion === 'Humedad') {
-        return `La humedad actual es del ${valormedido}%.`;
+        return `La humedad actual es del ${valormedido[0]}%.`;
       }else{
 
-      return `La temperatura actual es de ${valormedido}°C.`;}
+      return `La temperatura actual es de ${valormedido[0]}°C.`;}
 
     } catch (error) {
     }
@@ -167,9 +259,11 @@ const Chatbot = () => {
               ))}
               {pregunta && mensaje.length === 0 && (
                 <div className="faq-buttons">
-                  <button onClick={() => handleFAQClick('¿Cuales son los niveles aceptables?')}>¿Cuales son los niveles aceptables?</button>
+                  <button onClick={() => handleFAQClick('¿Cuales son los niveles apropiados?')}>¿Cuales son los niveles aceptables?</button>
                   <button onClick={() => handleFAQClick('¿Cuál es la humedad actual?')}>¿Cuál es la humedad actual?</button>
                   <button onClick={() => handleFAQClick('¿Cuál es la temperatura actual?')}>¿Cuál es la temperatura actual?</button>
+                  <button onClick={() => handleFAQClick('¿Cómo está la contaminación del aire?')}>¿Cómo está la contaminación del aire?</button>
+
                 </div>
               )}
             </div>
