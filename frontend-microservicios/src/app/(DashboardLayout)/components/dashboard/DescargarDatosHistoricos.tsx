@@ -333,9 +333,15 @@ const DescargarDatosHistoricos = () => {
     saveAs(blob, `Datos_Historicos_${fechaInicio}_${fechaFin}.md`);
   };
 
-  const minDate = '2024-07-26';
-  const currentDate = new Date().toISOString().split('T')[0];
+  const minDate = '2024-07-01';
 
+  const currentDate = new Date();
+  const year = currentDate.getFullYear();
+  const month = String(currentDate.getMonth() + 1).padStart(2, '0');
+  const day = String(currentDate.getDate()).padStart(2, '0');
+
+  const localCurrentDate = `${year}-${month}-${day}`;
+  
   return (
     <DashboardCard title="Descargar Datos Históricos">
       <Grid container spacing={5}>
@@ -348,7 +354,7 @@ const DescargarDatosHistoricos = () => {
             InputLabelProps={{
               shrink: true,
             }}
-            inputProps={{ min: minDate, max: fechaFin || currentDate }}
+            inputProps={{ min: minDate, max: fechaFin || localCurrentDate }}
             fullWidth
           />
         </Grid>
@@ -362,7 +368,7 @@ const DescargarDatosHistoricos = () => {
             InputLabelProps={{
               shrink: true,
             }}
-            inputProps={{ min: fechaInicio || minDate, max: currentDate }}
+            inputProps={{ min: fechaInicio || minDate, max: localCurrentDate }}
             fullWidth
           />
         </Grid>
@@ -394,7 +400,7 @@ const DescargarDatosHistoricos = () => {
               color="secondary"
               fullWidth
               size="large"
-              disabled={!fechaInicio || !fechaFin || fechaInicio < minDate || fechaFin > currentDate}
+              disabled={!fechaInicio || !fechaFin || fechaInicio < minDate || fechaFin > localCurrentDate}
             >
               Descargar
             </Button>
