@@ -12,7 +12,7 @@ const auth = require('../middlewares/authMiddleware');
 router.get('/sensores/ultimo_registro', sensorControl.ultimo_registro);
 router.get('/sensores', auth, sensorControl.listar);
 router.get('/sensores/:external', auth, sensorControl.obtener_sensor);
-router.post('/sensores/crear', sensorControl.crear);
+router.post('/sensores/crear', auth, sensorControl.crear);
 router.get('/sensores/registros/:external', auth, sensorControl.obtener_registros_climaticos);
 router.patch('/sensores/actualizar/:external', sensorControl.actualizar);
 router.delete('/sensores/eliminar/:external', auth, sensorControl.eliminar);

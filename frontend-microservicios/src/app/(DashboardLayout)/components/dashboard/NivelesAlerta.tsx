@@ -26,7 +26,7 @@ const validarNivel = (valor: number) => {
   if (valor <= 400) {
     nivel = "Bajo";
     nivelBg = "#228B22";
-    indicador = "impio";
+    indicador = "Aire muy limpio";
   } else if (valor > 400 && valor <= 800) {
     nivel = "Normal";
     nivelBg = "#32CD32";
