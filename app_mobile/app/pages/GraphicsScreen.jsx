@@ -16,14 +16,13 @@ const GraphicsScreen = () => {
 
   const processData = useMemo(() => (data, type) => {
     const processed = { labels: [], data: [] };
-    data.forEach((item, index) => {
-      if (item.sensor.tipo_medicion === type) {
-        processed.data.push(parseFloat(item.valor_medido));
-        if (index % 15 === 0) {
-          processed.labels.push(item.hora.split(':').slice(0, 2).join(':'));
-        } else {
-          processed.labels.push('');
-        }
+    const filteredData = data.filter(item => item.tipo_medicion === type);
+    filteredData.forEach((item, index) => {
+      processed.data.push(parseFloat(item.valor_medido));
+      if (index % 15 === 0) {
+        processed.labels.push(item.hora.split(':').slice(0, 2).join(':'));
+      } else {
+        processed.labels.push('');
       }
     });
     return processed;
@@ -96,6 +95,7 @@ const GraphicsScreen = () => {
     </ScrollView>
   );
 };
+
 
 const styles = StyleSheet.create({
   container: {

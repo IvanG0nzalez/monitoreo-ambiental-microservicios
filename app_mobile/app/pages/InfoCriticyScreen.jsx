@@ -22,7 +22,6 @@ export function InfoCriticyScreen({ navigation }) {
   const handleLinkPress = async () => {
     const url = URL_INFO;
     const supported = await Linking.canOpenURL(url);
-
     if (supported) {
       await Linking.openURL(url);
     } else {
@@ -32,37 +31,42 @@ export function InfoCriticyScreen({ navigation }) {
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer}>
-      <Text style={styles.title}>Información</Text>
-      
-      {renderLevelInfo('CRÍTICO', 
-        'CO2 > 1500ppm, Temp < 14°C o > 32°C, Hum < 5% o > 90%',
-        'Condiciones peligrosas para la salud y el bienestar.',
-        'Evacuar inmediatamente y ventilar el área. Contactar a profesionales.')}
-      
-      {renderLevelInfo('ALTO', 
-        'CO2 > 1200ppm, Temp < 16°C o > 30°C, Hum < 10% o > 80%',
-        'Condiciones insalubres que requieren atención inmediata.',
-        'Mejorar ventilación urgentemente. Reducir la ocupación si es posible.')}
-      
-      {renderLevelInfo('MODERADO', 
-        'CO2 > 1000ppm, Temp < 18°C o > 28°C, Hum < 20% o > 70%',
-        'Calidad de aire subóptima que puede causar incomodidad.',
-        'Considerar mejorar la ventilación. Monitorear de cerca los niveles.')}
-      
-      {renderLevelInfo('BUENO', 
-        'CO2 > 800ppm, Temp < 20°C o > 26°C, Hum < 30% o > 60%',
-        'Condiciones aceptables para la mayoría de las personas.',
-        'Mantener la ventilación actual. Realizar chequeos regulares.')}
-      
-      {renderLevelInfo('ÓPTIMO', 
-        'CO2 ≤ 800ppm, Temp 20-26°C, Hum 30-60%',
-        'Condiciones ideales para el confort y la salud.',
-        'Mantener estas condiciones. Usar como referencia para otras áreas.')}
+      <Text style={styles.title}>Información de Calidad del Aire (CO2)</Text>
+
+      {renderLevelInfo('BAJO',
+        'CO2 ≤ 400ppm',
+        'Aire muy limpio. Niveles típicos de espacios exteriores bien ventilados.',
+        'Mantener estas condiciones excelentes. Ideal para espacios ocupados.')}
+
+      {renderLevelInfo('NORMAL',
+        '400ppm < CO2 ≤ 800ppm',
+        'Aire aceptable. Calidad de aire interior típica en espacios bien ventilados.',
+        'Continuar con las prácticas actuales de ventilación. Monitorear regularmente.')}
+
+      {renderLevelInfo('ÓPTIMO',
+        '800ppm < CO2 ≤ 1000ppm',
+        'Aire de buena calidad. Aún dentro de rangos aceptables para la mayoría de las personas.',
+        'Considerar aumentar ligeramente la ventilación si es posible. Mantener un monitoreo constante.')}
+
+      {renderLevelInfo('ALTO',
+        '1000ppm < CO2 ≤ 1500ppm',
+        'Aire ligeramente contaminado. Puede causar somnolencia y afectar la concentración.',
+        'Mejorar la ventilación. Reducir la ocupación si es posible. Identificar y controlar fuentes de CO2.')}
+
+      {renderLevelInfo('MUY ALTO',
+        '1500ppm < CO2 ≤ 2000ppm',
+        'Aire contaminado. Puede causar dolores de cabeza, fatiga y disminución del rendimiento.',
+        'Aumentar significativamente la ventilación. Considerar evacuar si no se puede mejorar rápidamente.')}
+
+      {renderLevelInfo('PELIGROSO',
+        'CO2 > 2000ppm',
+        'Aire muy contaminado. Riesgo de problemas de salud más serios con exposición prolongada.',
+        'Evacuar el área inmediatamente. Ventilar exhaustivamente antes de reocupar. Investigar las causas.')}
 
       <TouchableOpacity style={styles.moreInfoContainer} onPress={handleLinkPress}>
         <Text style={styles.moreInfoTitle}>Más Información</Text>
         <Text style={styles.moreInfoText}>
-          Para obtener información adicional sobre los niveles de calidad del aire puede visitar el siguiente enlace, dando click al contenedor o al enlace aqui abajo:
+          Para obtener información adicional sobre los niveles de CO2 y sus efectos en la salud, puede visitar el siguiente enlace:
         </Text>
         <Text style={styles.linkText}>Toque aquí para visitar el sitio</Text>
       </TouchableOpacity>

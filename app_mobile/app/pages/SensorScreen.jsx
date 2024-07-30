@@ -37,7 +37,7 @@ export function SensorScreen() {
       if (criticityLevel !== lastCriticityLevel) {
         setLastCriticityLevel(criticityLevel);
 
-        if (criticityLevel === 'CRÍTICO') {
+        if (criticityLevel === 'PELIGROSO') {
           setModalVisible(true);
         } else {
           console.log(`Notificación: El nivel de calidad del aire ha cambiado a ${criticityLevel}.`);
