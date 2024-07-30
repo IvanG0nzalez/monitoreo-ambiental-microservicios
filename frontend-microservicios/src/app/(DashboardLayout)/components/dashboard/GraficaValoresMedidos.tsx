@@ -183,7 +183,7 @@ const GraficaValoresMedidos = () => {
         yaxis: {
             tickAmount: 6,
             labels: {
-                formatter: (value: number) => `${value} ${getUnit(medida)}`,
+                formatter: (value: number) => `${value.toFixed(2)} ${getUnit(medida)}`,
             }
         },
         xaxis: {
@@ -200,7 +200,7 @@ const GraficaValoresMedidos = () => {
             theme: 'dark',
             fillSeriesColor: true,
             y: {
-                formatter: (value: number) => `${value} ${getUnit(medida)}`,
+                formatter: (value: number) => `${value.toFixed(2)} ${getUnit(medida)}`,
             }
         },
     };
