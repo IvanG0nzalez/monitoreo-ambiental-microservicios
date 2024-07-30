@@ -89,7 +89,7 @@ La arquitectura del proyecto se basa en microservicios, donde cada uno de ellos 
 ### Cuentas
 
 - **Ruta**: `./microservicio-cuentas`
-- **Descripción**: Manje la información de las cuentas
+- **Descripción**: Maneja la información de las cuentas.
 
 ### Usuarios
 
