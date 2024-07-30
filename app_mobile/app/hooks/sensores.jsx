@@ -1,6 +1,7 @@
 import { METHOD_GET } from "../utils/api"
 import { useState, useEffect } from 'react';
 import { TIMEREFRESH } from "../constants/constants";
+
 export const useQuerySensorsLastData = () => {
     const [data, setData] = useState(null);
     const [error, setError] = useState(null);

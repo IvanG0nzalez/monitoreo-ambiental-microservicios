@@ -10,21 +10,20 @@ const Chatbot = () => {
   const autoScroll = useRef(null);
 
   const patrones = [
-    { keys: ['hola'], respuesta: 'Hola, ¿en qué puedo ayudarte?' },
+    { keys: ['hola', 'Buen dia'], respuesta: 'Hola, ¿en qué puedo ayudarte?' },
     { keys: ['niveles de calidad', 'calidad apropiada'], respuesta: 'Según la Agencia de Protección del Medio Ambiente de EE.UU. (USEPA), los niveles aceptables relativos deben oscilar entre:<br />Humedad = 30%-60%<br />Temperatura = 20°C - 25°C<br />Dióxido de Carbono = 300ppm y 400ppm.' },
-    { keys: ['temperatura'], respuesta: obtenerTemperatura },
-    { keys: ['humedad'], respuesta: 'La humedad actual es del 60%.' },
-    { keys: ['calidad actual'], respuesta: 'La calidad del aire es buena.' },
-    { keys: ['cambiar ip de sensor'], respuesta: 'Para actualizar la información de los sensores, dirígete al área de Sensores dentro de Control, que puedes encontrar en el menú lateral.' },
-    { keys: ['administrar cuentas'], respuesta: 'Para administrar la información de las cuentas, dirígete al área de Cuentas dentro de Control, que puedes encontrar en el menú lateral.' },
-    { keys: ['administrar mi cuenta'], respuesta: 'Para administrar la información de tu cuenta, dirígete al área superior sobre la imagen de tu usuario y selecciona el Perfil.' },
-    { keys: ['cerrar sesion', 'salir', 'desloguearse'], respuesta: 'Para cerrar sesión, dirígete al área superior sobre la imagen de tu usuario y selecciona "Cerrar Sesión".' },
-    { keys: ['estado del sistema'], respuesta: 'El sistema de monitoreo ambiental está funcionando correctamente.' },
+    { keys: ['temperatura'], respuesta: obtenerDato('Temperatura') },
+    { keys: ['humedad'], respuesta: obtenerDato('Humedad') },
+    { keys: ['CO2', 'Dioxido de carbono'], respuesta: obtenerDato('CO2') },
+    { keys: ['Adios', 'Chao', 'Bye'], respuesta: 'Adios, ten un buen día' },
+    { keys: ['Valores obtenidos', 'Valores actuales'], respuesta: obtenerDatos() },
   ];
 
-  async function obtenerTemperatura() {
+  async function obtenerTemperaturas() {
     //try {
-      //const response = await fetch('/api/temperatura'); 
+      //const response = await fetch('/api/temperatura');
+      const response = await api_sensores.ultimo_registro(); 
+      const datos = response.data.datos;
       const data = 25
       return `La temperatura actual es de ${data}°C.`;
     //} catch (error) {
@@ -32,6 +31,63 @@ const Chatbot = () => {
       //return 'No se pudo obtener la temperatura actual. Por favor, intenta de nuevo más tarde.';
     //}
   }
+
+
+  async function obtenerDatos() {
+    try {
+      const response = await api_sensores.ultimo_registro();
+      const datos = response.data.datos;
+      
+      const valoresMedidos = datos.map((medicion) => ({
+        tipo: medicion.tipo_medicion,
+        valor: medicion.registro_climatico[0].valor_medido
+      }));
+  
+      let co2 = null;
+      let humedad = null;
+      let temperatura = null;
+  
+      valoresMedidos.forEach(({ tipo, valor }) => {
+        if (tipo === 'CO2') {
+          co2 = valor;
+        } else if (tipo === 'Humedad') {
+          humedad = valor;
+        } else if (tipo === 'Temperatura') {
+          temperatura = valor;
+        }
+      });
+  
+      return "Los valores actuales son: CO2: " + co2 + " ppm, Humedad: " + humedad + "%, Temperatura: " + temperatura + "°C.";
+    } catch (error) {
+      console.error('Error al obtener los datos:', error);
+      return 'No se pudieron obtener los datos. Por favor, intenta de nuevo más tarde.';
+    }
+  }
+  
+
+  async function obtenerDato(tipoMedicion) {
+    try {
+      const response = await api_sensores.ultimo_registro();
+      const datos = response.data.datos;
+      
+      
+      const valormedido = datos
+        .filter((medicion) => medicion.tipo_medicion === tipoMedicion)
+        .map((medicion) => medicion.registro_climatico[0].valor_medido);
+      
+      if (tipoMedicion === 'CO2') {
+        return `El CO2 en el aire actual es de ${valormedido} ppm.`;
+      } else  if (tipoMedicion === 'Humedad') {
+        return `La humedad actual es del ${valormedido}%.`;
+      }else{
+
+      return `La temperatura actual es de ${valormedido}°C.`;}
+
+    } catch (error) {
+    }
+  }
+  
+
 
   const envioMensaje = (message = input) => {
     if (message.trim() !== '') {

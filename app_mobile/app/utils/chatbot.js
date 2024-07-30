@@ -2,6 +2,8 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { View, Text, TextInput, Button, ScrollView, StyleSheet } from 'react-native';
 import stringSimilarity from 'string-similarity';
+import { useQuerySensorsLastData } from '../hooks/sensores';
+
 
 const Chatbot = () => {
   const [mensaje, setMensaje] = useState([]);
@@ -9,22 +11,20 @@ const Chatbot = () => {
   const autoScroll = useRef(null);
 
   const patrones = [
-    { keys: ['hola'], respuesta: 'Hola, ¿en qué puedo ayudarte?' },
+    { keys: ['hola', 'Buen dia'], respuesta: 'Hola, ¿en qué puedo ayudarte?' },
     { keys: ['niveles de calidad', 'calidad apropiada'], respuesta: 'Según la Agencia de Protección del Medio Ambiente de EE.UU. (USEPA), los niveles aceptables relativos deben oscilar entre:<br />Humedad = 30%-60%<br />Temperatura = 20°C - 25°C<br />Dióxido de Carbono = 300ppm y 400ppm.' },
-    { keys: ['temperatura'], respuesta: obtenerTemperatura },
-    { keys: ['humedad'], respuesta: 'La humedad actual es del 60%.' },
-    { keys: ['CO2', 'Dioxido de Carbono', 'carbono'], respuesta: 'El CO2, es de 800ppm' },
-    { keys: ['calidad actual'], respuesta: 'La calidad del aire es buena.' },
-    { keys: ['cambiar ip de sensor'], respuesta: 'Para actualizar la información de los sensores, dirígete al área de Sensores dentro de Control, que puedes encontrar en el menú lateral.' },
-    { keys: ['administrar cuentas'], respuesta: 'Para administrar la información de las cuentas, dirígete al área de Cuentas dentro de Control, que puedes encontrar en el menú lateral.' },
-    { keys: ['administrar mi cuenta'], respuesta: 'Para administrar la información de tu cuenta, dirígete al área superior sobre la imagen de tu usuario y selecciona el Perfil.' },
-    { keys: ['cerrar sesion', 'salir', 'desloguearse'], respuesta: 'Para cerrar sesión, dirígete al área superior sobre la imagen de tu usuario y selecciona "Cerrar Sesión".' },
-    { keys: ['estado del sistema'], respuesta: 'El sistema de monitoreo ambiental está funcionando correctamente.' },
+    { keys: ['temperatura'], respuesta: obtenerDato('Temperatura') },
+    { keys: ['humedad'], respuesta: obtenerDato('Humedad') },
+    { keys: ['CO2', 'Dioxido de carbono'], respuesta: obtenerDato('CO2') },
+    { keys: ['Adios', 'Chao', 'Bye'], respuesta: 'Adios, ten un buen día' },
+    { keys: ['Valores obtenidos', 'Valores actuales'], respuesta: obtenerDatos() },
   ];
 
-  async function obtenerTemperatura() {
+  async function obtenerTemperaturas() {
     //try {
-      //const response = await fetch('/api/temperatura'); 
+      //const response = await fetch('/api/temperatura');
+      const response = await api_sensores.ultimo_registro(); 
+      const datos = response.data.datos;
       const data = 25
       return `La temperatura actual es de ${data}°C.`;
     //} catch (error) {
@@ -32,6 +32,95 @@ const Chatbot = () => {
       //return 'No se pudo obtener la temperatura actual. Por favor, intenta de nuevo más tarde.';
     //}
   }
+
+
+  async function obtenerDatos() {
+    try {
+      const { data, error } = useQuerySensorsLastData();
+  
+      // Verifica si hay un error o si data es null o undefined
+      if (error || !data || !data.datos) {
+        throw new Error('No se pudieron obtener los datos del backend.');
+      }
+  
+      // Asegúrate de que datos sea siempre un array
+      const datos = Array.isArray(data.datos) ? data.datos : [];
+  
+      // Asignar valores por defecto si no se tienen datos válidos
+      let co2 = 400; // ppm
+      let humedad = 40; // %
+      let temperatura = 21; // °C
+  
+      if (datos.length > 0) {
+        datos.forEach((medicion) => {
+          if (medicion && medicion.registro_climatico && medicion.registro_climatico[0]) {
+            const tipo = medicion.tipo_medicion;
+            const valor = medicion.registro_climatico[0].valor_medido;
+  
+            if (tipo === 'CO2' && valor != null) {
+              co2 = valor;
+            } else if (tipo === 'Humedad' && valor != null) {
+              humedad = valor;
+            } else if (tipo === 'Temperatura' && valor != null) {
+              temperatura = valor;
+            }
+          }
+        });
+      }
+  
+      return `Los valores actuales son: CO2: ${co2} ppm, Humedad: ${humedad}%, Temperatura: ${temperatura}°C.`;
+    } catch (error) {
+      console.error('Error al obtener los datos:', error.message || error);
+      return 'Los valores actuales son: CO2: 400 ppm, Humedad: 40%, Temperatura: 21°C.';
+    }
+  }
+  
+  
+  
+
+  async function obtenerDato(tipoMedicion) {
+    try {
+      const { data: datos, error } = useQuerySensorsLastData();
+      
+      
+      const valormedido = datos
+        .filter((medicion) => medicion.tipo_medicion === tipoMedicion)
+        .map((medicion) => medicion.registro_climatico[0].valor_medido);
+      
+      if (tipoMedicion === 'CO2') {
+        return `El CO2 en el aire actual es de ${valormedido} ppm.`;
+      } else  if (tipoMedicion === 'Humedad') {
+        return `La humedad actual es del ${valormedido}%.`;
+      }else{
+
+      return `La temperatura actual es de ${valormedido}°C.`;}
+
+    } catch (error) {
+    }
+  }
+
+  async function obtenerDato(tipoMedicion) {
+    try {
+ 
+      const { data: datos, error } = useQuerySensorsLastData();
+
+      
+      const valormedido = datos
+        .filter((medicion) => medicion.tipo_medicion === tipoMedicion)
+        .map((medicion) => medicion.registro_climatico[0].valor_medido);
+      
+      if (tipoMedicion === 'CO2') {
+        return `El CO2 en el aire actual es de ${valormedido} ppm.`;
+      } else  if (tipoMedicion === 'Humedad') {
+        return `La humedad actual es del ${valormedido}%.`;
+      }else{
+
+      return `La temperatura actual es de ${valormedido}°C.`;}
+
+    } catch (error) {
+    }
+  }
+
 
   const envioMensaje = (message = input) => {
     if (message.trim() !== '') {
