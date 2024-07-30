@@ -18,6 +18,7 @@ import {
   Select,
   MenuItem,
   Skeleton,
+  InputAdornment,
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import EditIcon from "@mui/icons-material/Edit";
@@ -29,6 +30,8 @@ import { useEffect } from "react";
 import { getToken } from "@/hooks/SessionUtils";
 import { useSnackbar } from "notistack";
 import { api_cuentas, api_roles, api_usuarios } from "@/hooks/Api";
+import { Visibility, VisibilityOff } from "@mui/icons-material";
+
 interface User {
   id?: Number,
   cedula: string,
@@ -92,6 +95,13 @@ const UserAccounts = () => {
   const [editOpen, setEditOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [userToDelete, setUserToDelete] = useState<string | null>(null);
+
+  const [showPassword, setShowPassword] = useState(false);
+  const [showEditPassword, setShowEditPassword] = useState(false);
+
+  const handleClickShowPassword = () => setShowPassword(!showPassword);
+  const handleClickShowEditPassword = () => setShowEditPassword(!showEditPassword);
+  const handleMouseDownPassword = (event: React.MouseEvent<HTMLButtonElement>) => event.preventDefault();
 
   useEffect(() => {
     if (!token) {
@@ -406,7 +416,7 @@ const UserAccounts = () => {
                       >
                         <EditIcon />
                       </IconButton>
-                      {user.cedula !== '0000000000' && (
+                      {user.rol !== 'Administrador' && (
                         <IconButton
                           color="error"
                           onClick={() => handleDeleteOpen(user.external_id)}
@@ -446,11 +456,24 @@ const UserAccounts = () => {
           <TextField
             name="clave"
             label="Clave"
-            type="password"
+            type={showPassword ? "text" : "password"}
             value={newUser.clave}
             onChange={handleChange}
             fullWidth
             margin="normal"
+            InputProps={{
+              endAdornment: (
+                <InputAdornment position="end">
+                  <IconButton
+                    aria-label="toggle password visibility"
+                    onClick={handleClickShowPassword}
+                    onMouseDown={handleMouseDownPassword}
+                  >
+                    {showPassword ? <Visibility /> : <VisibilityOff />}
+                  </IconButton>
+                </InputAdornment>
+              )
+            }}
           />
           <TextField
             name="cedula"
@@ -525,11 +548,24 @@ const UserAccounts = () => {
           <TextField
             name="clave"
             label="Clave"
-            type="password"
+            type={showEditPassword ? "text" : "password"}
             value={editUser.clave}
             onChange={handleEditChange}
             fullWidth
             margin="normal"
+            InputProps={{
+              endAdornment: (
+                <InputAdornment position="end">
+                  <IconButton
+                    aria-label="toggle password visibility"
+                    onClick={handleClickShowEditPassword}
+                    onMouseDown={handleMouseDownPassword}
+                  >
+                    {showEditPassword ? <Visibility /> : <VisibilityOff />}
+                  </IconButton>
+                </InputAdornment>
+              )
+            }}
           />
           <TextField
             name="cedula"

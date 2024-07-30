@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   Box,
   Typography,
@@ -6,6 +6,8 @@ import {
   Button,
   Stack,
   TextField,
+  InputAdornment,
+  IconButton,
 } from "@mui/material";
 import Link from "next/link";
 import { useForm, Controller } from "react-hook-form";
@@ -16,6 +18,7 @@ import { useSnackbar } from "notistack";
 import { useRouter } from "next/navigation";
 
 import CustomTextField from "@/app/(DashboardLayout)/components/forms/theme-elements/CustomTextField";
+import { Visibility, VisibilityOff } from "@mui/icons-material";
 
 interface loginType {
   title?: string;
@@ -34,6 +37,10 @@ const AuthLogin = ({ title, subtitle, subtext }: loginType) => {
 
   const { enqueueSnackbar } = useSnackbar();
   const router = useRouter();
+  const [showPassword, setShowPassword] = useState(false);  
+
+  const handleClickShowPassword = () => setShowPassword(!showPassword);
+  const handleMouseDownPassword = (event: React.MouseEvent<HTMLButtonElement>) => event.preventDefault();
 
   const onSubmit = async (data: any) => {
     try {
@@ -104,11 +111,24 @@ const AuthLogin = ({ title, subtitle, subtext }: loginType) => {
               render={({ field }) => (
                 <CustomTextField
                   {...field}
-                  type="password"
+                  type={showPassword ? "text" : "password"}
                   variant="outlined"
                   fullWidth
                   error={errors.clave ? true : false}
                   helperText={errors.clave ? errors.clave.message : ""}
+                  InputProps= {{
+                    endAdornment: (
+                      <InputAdornment position="end">
+                        <IconButton
+                          aria-label="toggle password visibility"
+                          onClick={handleClickShowPassword}
+                          onMouseDown={handleMouseDownPassword}
+                        >
+                          {showPassword ? <Visibility /> : <VisibilityOff />}
+                        </IconButton>
+                      </InputAdornment>
+                    )
+                  }}
                 />
               )}
             />
