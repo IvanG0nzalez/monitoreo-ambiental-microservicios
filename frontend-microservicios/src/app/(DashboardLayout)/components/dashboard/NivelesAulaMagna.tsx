@@ -258,7 +258,7 @@ const NivelesAulaMagna = () => {
                       {medicion.sensor}
                     </Typography>
                   </TableCell>
-                  <TableCell>
+                  <TableCell align="center">
                     <Chip
                       sx={{
                         px: "4px",
@@ -278,7 +278,7 @@ const NivelesAulaMagna = () => {
                     </Typography>
                   </TableCell>
                   <TableCell align="right">
-                    <Typography variant="h6">{`${medicion.valor_medido} ${getUnit(medicion.sensor)}`}</Typography>
+                    <Typography variant="h6">{`${medicion.valor_medido.toFixed(2)} ${getUnit(medicion.sensor)}`}</Typography>
                   </TableCell>
                 </TableRow>
               ))

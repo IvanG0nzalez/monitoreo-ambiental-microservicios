@@ -50,6 +50,7 @@ const SensorDisplayPage = () => {
   const [sensors, setSensors] = useState<Sensor[]>([]);
   const [loading, setLoading] = useState(true);
   const [noData, setNoData] = useState(true);
+  const [isMonitoring, setIsMonitoring] = useState(false);
 
   const [newSensor, setNewSensor] = useState<Sensor>({
     alias: "",
@@ -92,6 +93,22 @@ const SensorDisplayPage = () => {
     };
     checkAdminStatus();
 
+  }, [token]);
+
+  useEffect(() => {
+    const fetchMonitoringStatus = async () => {
+      try {
+        const response = await api_sensores.estado_monitoreo(token);
+                
+        setIsMonitoring(response.data.datos);
+      } catch (error) {
+        console.error(error);
+      }
+    };
+    fetchMonitoringStatus();
+
+    const intervalId = setInterval(fetchMonitoringStatus, 3000); // Intervalo de 3 segundos para volver a hacer la petición
+    return () => clearInterval(intervalId);
   }, [token]);
 
   useEffect(() => {
@@ -339,6 +356,7 @@ const SensorDisplayPage = () => {
                     <IconButton
                       color="warning"
                       onClick={() => handleEditOpen(sensor)}
+                      disabled={isMonitoring}
                     >
                       <EditIcon />
                     </IconButton>
@@ -346,6 +364,7 @@ const SensorDisplayPage = () => {
                     <IconButton
                       color="error"
                       onClick={() => handleDeleteOpen(sensor.external_id)}
+                      disabled={isMonitoring}
                     >
                       <DeleteIcon />
                     </IconButton>
