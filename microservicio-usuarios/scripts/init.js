@@ -14,7 +14,7 @@ async function init() {
             console.log('\x1b[35m%s\x1b[0m', 'El rol "Administrador" ya existe en la base de datos.');
         }
 
-        const usuarioAdmin = await usuario.findOne({ where: { cedula: '0000000000' } });
+        const usuarioAdmin = await usuario.findOne({ where: { id: 1 } });
 
         if(!usuarioAdmin) {
             const req = {
