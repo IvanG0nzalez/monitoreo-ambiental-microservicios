@@ -18,7 +18,7 @@ export default function RootLayout({
           maxSnack={3}
           anchorOrigin={{
             vertical: "bottom",
-            horizontal: "right",
+            horizontal: "left",
           }}
           autoHideDuration={4000}
         >
