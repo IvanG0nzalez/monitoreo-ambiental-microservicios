@@ -1,11 +1,3 @@
-export const CRITICALITY_LEVELS = {
-  ÓPTIMO: { color: '#4CAF50', textColor: '#FFFFFF' },
-  BUENO: { color: '#8BC34A', textColor: '#FFFFFF' },
-  MODERADO: { color: '#FFC107', textColor: '#FFFFFF' },
-  ALTO: { color: '#FF9800', textColor: '#FFFFFF' },
-  CRÍTICO: { color: '#FE0000', textColor: '#FFFFFF' },
-};
-
 export const UBICACION_AULA_MAGNA = {
   latitude: -4.0304380864135645,
   longitude: -79.19930051117329,
@@ -40,12 +32,22 @@ export const chartConfigCO2 = {
   barPercentage: 0.5,
 };
 
-export const getCriticityLevel = (co2, temp, hum) => {
-  if (hum < 5 || hum > 90 || co2 > 1500 || temp < 14 || temp > 32) return 'CRÍTICO';
-  if (hum < 10 || hum > 80 || co2 > 1200 || temp < 16 || temp > 30) return 'ALTO';
-  if (hum < 20 || hum > 70 || co2 > 1000 || temp < 18 || temp > 28) return 'MODERADO';
-  if (hum < 30 || hum > 60 || co2 > 800 || temp < 20 || temp > 26) return 'BUENO';
-  return 'ÓPTIMO';
+export const CRITICALITY_LEVELS = {
+  BAJO: { color: '#8BC34A', textColor: '#FFFFFF' }, // Verde claro
+  NORMAL: { color: '#4CAF50', textColor: '#FFFFFF' }, // Verde medio
+  ÓPTIMO: { color: '#CDDC39', textColor: '#FFFFFF' }, // Lima
+  ALTO: { color: '#FFEB3B', textColor: '#FFFFFF' }, // Amarillo
+  'MUY ALTO': { color: '#FFC107', textColor: '#FFFFFF' }, // Ámbar
+  PELIGROSO: { color: '#F44336', textColor: '#FFFFFF' }, // Rojo
+};
+
+export const getCriticityLevel = (co2) => {
+  if (co2 <= 400) return 'BAJO';
+  if (co2 <= 800) return 'NORMAL';
+  if (co2 <= 1000) return 'ÓPTIMO';
+  if (co2 <= 1500) return 'ALTO';
+  if (co2 <= 2000) return 'MUY ALTO';
+  return 'PELIGROSO';
 };
 
 export const TIMEREFRESH = 10000;

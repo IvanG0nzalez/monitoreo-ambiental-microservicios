@@ -43,16 +43,9 @@ export const estaSesion = () => {
   }
 };
 
-export const getId = () => {
+export const getExternaluser = () => {
   if (typeof window !== "undefined") {
-    return sessionStorage.getItem("id");
-  }
-  return null;
-};
-
-export const getRol = () => {
-  if (typeof window !== "undefined") {
-    return sessionStorage.getItem("rol");
+    return sessionStorage.getItem("external");
   }
   return null;
 };

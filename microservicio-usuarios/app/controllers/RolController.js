@@ -53,7 +53,7 @@ class RolController {
             return res.status(202).json({ msg: 'Error al crear el rol', code: 500, datos: {} });
         }
 
-        return res.status(201).json({ msg: 'Rol creado', code: 201 });
+        return res.status(201).json({ msg: 'Rol creado', code: 201, datos: nuevo_rol.external_id });
     }
 
     async actualizar(req, res) {

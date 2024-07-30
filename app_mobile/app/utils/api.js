@@ -1,4 +1,4 @@
-export const URL_API = "http:10.20.138.190:3000/api";
+export const URL_API = "https://symmetrical-space-trout-r597v6rrrxv356w5-80.app.github.dev/api";
 
 export async function METHOD_GET(resource) {
     try {

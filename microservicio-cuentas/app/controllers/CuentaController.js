@@ -83,15 +83,15 @@ class CuentaController {
             return await sendMessage('cuenta_creada', { success: false, msg: 'Error al crear la cuenta' });
         }
     }
+    
     async actualizar(message) {
         const { correo, nombre_usuario, clave, id_usuario } = message;
-        console.log(message);
         /*if (!correo && !nombre_usuario && !clave) {
             return res.status(400).json({ msg: 'Parámetros incorrectos', code: 400, datos: {} });
         }*/
 
         const cuentaAux = await cuenta.findOne({ where: { id_usuario: id_usuario } });
-        console.log(cuentaAux);
+
         if (!cuentaAux) {
             return res.status(202).json({ msg: 'Cuenta no encontrada', code: 404, datos: {} });
         }
@@ -185,6 +185,7 @@ class CuentaController {
 
         const token_data = {
             external: cuentaAux.external_id,
+            id_usuario: cuentaAux.id_usuario,
             check: true,
         };
 
@@ -197,7 +198,7 @@ class CuentaController {
             nombre_usuario: cuentaAux.nombre_usuario,
         };
 
-        return res.status(200).json({ msg: 'Inicio de sesión correcto', code: 200, datos: data });
+        return res.status(200).json({ msg: `Bienvenido, ${cuentaAux.nombre_usuario}`, code: 200, datos: data });
     }
 }
 

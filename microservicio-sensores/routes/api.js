@@ -8,6 +8,7 @@ const auth = require('../middlewares/authMiddleware');
 
 //TODO agregar auth y jsonwebtoken
 //API sensores
+
 router.get('/sensores/ultimo_registro', sensorControl.ultimo_registro);
 router.get('/sensores', auth, sensorControl.listar);
 router.get('/sensores/:external', auth, sensorControl.obtener_sensor);
@@ -17,12 +18,14 @@ router.patch('/sensores/actualizar/:external', sensorControl.actualizar);
 router.delete('/sensores/eliminar/:external', auth, sensorControl.eliminar);
 
 //API monitoreo
-router.post('/sensores/iniciar-monitoreo', sensorControl.iniciarMonitoreoTodosSensores.bind(sensorControl));
-router.post('/sensores/detener-monitoreo', (req, res) => sensorControl.detenerMonitoreo(req, res));
+router.post('/sensores/monitoreo/iniciar', auth, sensorControl.iniciarMonitoreoTodosSensores.bind(sensorControl));
+router.post('/sensores/monitoreo/detener', auth, (req, res) => sensorControl.detenerMonitoreo(req, res));
+router.get('/sensores/monitoreo/estado', auth,  (req, res) => sensorControl.obtenerEstadoMonitoreo.bind(sensorControl)(req, res));
 
 //API registros
 router.get('/registros/listar/hoy', registrosControl.listar_hoy);
-router.get('/registros', registrosControl.listar);
+router.get('/registros/listar', registrosControl.listar);   
 router.get('/registros/listar/fecha/:fecha', registrosControl.listar_por_fecha);
+router.get('/registros/listar/:fecha_inicio/:fecha_fin', registrosControl.listar_entre_fechas);
 
 module.exports = router;

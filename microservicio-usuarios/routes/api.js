@@ -11,17 +11,19 @@ const auth = require('../middlewares/authMiddleware');
 
 // Endpoints de usuarios
 router.get('/usuarios',auth, usuarioControl.listar);
+router.get('/usuarios/validar', auth, usuarioControl.es_admin);
+
 //router.get('/usuarios_cuentas', auth, usuarioControl.listar_con_cuenta);
-router.get('/usuarios/:external_id', auth, usuarioControl.obtener);
+router.get('/usuarios/usuario', auth, usuarioControl.obtener);
 router.post('/usuarios/crear', usuarioControl.crear);
 router.patch('/usuarios/actualizar/:external_id', auth, usuarioControl.actualizar);
 router.delete('/usuarios/eliminar/:external_id', auth, usuarioControl.eliminar);
 
 
 // Endpoints de roles
-router.get('/roles', rolControl.listar);
-router.get('/roles/:external_id', rolControl.obtener);
+router.get('/roles', auth, rolControl.listar);
 router.post('/roles/crear', auth, rolControl.crear);
+router.get('/roles/:external_id', rolControl.obtener);
 router.patch('/roles/actualizar/:external_id', auth, rolControl.actualizar);
 
 module.exports = router;

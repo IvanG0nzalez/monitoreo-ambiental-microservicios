@@ -8,6 +8,12 @@ const { EventHubConsumerClient } = require("@azure/event-hubs");
 const { v4: uuidv4 } = require('uuid');
 
 const moment = require('moment-timezone');
+
+var fecha_hora_actual = new Date();
+// Ajustar la fecha y hora a la zona horaria de Ecuador (UTC-5)
+var fecha_hora_utc = fecha_hora_actual.getTime();
+var offset = -5 * 60 * 60 * 1000; // UTC-5 en milisegundos
+var fecha_hora_local = new Date(fecha_hora_utc + offset);
 class SensorControl {
 
     constructor() {
@@ -18,7 +24,11 @@ class SensorControl {
         var lista = await sensor.findAll({
             attributes: ['alias', 'cadena_conexion', 'tipo_medicion', 'external_id'],
         });
-        return res.status(200).json({ msg: "OK", code: 200, datos: lista });
+
+        if (lista.length === 0) {
+            return res.status(200).json({ msg: "No hay sensores registrados.", code: 200, datos: [] });
+        }
+        return res.status(200).json({ msg: "Sensores cargados correctamente.", code: 200, datos: lista });
     }
 
     async obtener_sensor(req, res) {
@@ -66,22 +76,45 @@ class SensorControl {
     }
 
     async ultimo_registro(req, res) {
+        const fechaActual = fecha_hora_local.toISOString().slice(0, 10);
+
         var sensores = await sensor.findAll({
             include: [{
                 model: models.registro_climatico, as: "registro_climatico",
                 attributes: ['fecha', 'hora', 'valor_medido'],
+                where: { fecha: fechaActual },
                 order: [['fecha', 'DESC'], ['hora', 'DESC']],
                 limit: 1,
             }],
             attributes: ['alias', 'cadena_conexion', 'tipo_medicion', 'external_id'],
         });
+
+        if (sensores.length === 0 || sensores.every(sensor => sensor.registro_climatico.length === 0)) {
+            
+            const fechaAyer = new Date(fecha_hora_utc + offset - 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+
+            sensores = await sensor.findAll({
+                include: [{
+                    model: models.registro_climatico, as: "registro_climatico",
+                    attributes: ['fecha', 'hora', 'valor_medido'],
+                    where: { fecha: fechaAyer },
+                    order: [['fecha', 'DESC'], ['hora', 'DESC']],
+                    limit: 1,
+                }],
+                attributes: ['alias', 'cadena_conexion', 'tipo_medicion', 'external_id'],
+            });
+
+            if (sensores.length === 0 || sensores.every(sensor => sensor.registro_climatico.length === 0)) {
+                return res.status(200).json({ msg: "No se han registrado datos hace más de 48 horas", datos: [] });
+            }
+        }
+
         var lista = sensores.map(sensor => {
             let sensorJSON = sensor.toJSON();
             delete sensorJSON.id;
             return sensorJSON;
         });
-        res.status(200);
-        res.json({ msg: "OK", code: 200, datos: lista });
+        return res.status(200).json({ msg: "OK", code: 200, datos: lista });
     }
 
     async crear(req, res) {
@@ -89,7 +122,7 @@ class SensorControl {
             req.body.hasOwnProperty('cadena_conexion') &&
             req.body.hasOwnProperty('tipo_medicion')) {
             if (!connectionStringRegex.test(req.body.cadena_conexion)) {
-                return res.status(202).json({ msg: "La cadena de conexión no es válida", code: 400 });
+                return res.status(202).json({ msg: "La cadena de conexión no es válida.", code: 400 });
             } else {
                 var uuid = require('uuid');
                 var data = {
@@ -101,7 +134,7 @@ class SensorControl {
 
                 var result = await sensor.create(data);
                 if (result === null) {
-                    return res.status(202).json({ msg: "Error al crear el sensor", code: 401 });
+                    return res.status(202).json({ msg: "Error al crear el sensor.", code: 401 });
                 } else {
                     const datos = {
                         alias: result.alias,
@@ -109,11 +142,11 @@ class SensorControl {
                         tipo_medicion: result.tipo_medicion,
                         external_id: result.external_id
                     };
-                    return res.status(201).json({ msg: "Sensor creado correctamente", code: 201, datos });
+                    return res.status(201).json({ msg: "Sensor creado correctamente.", code: 201, datos });
                 }
             }
         } else {
-            return res.status(202).json({ msg: "Faltan datos", code: 400 });
+            return res.status(202).json({ msg: "Faltan datos.", code: 400 });
         }
     }
 
@@ -258,6 +291,10 @@ class SensorControl {
         }
     }
 
+    async obtenerEstadoMonitoreo(req, res) {
+        const hayClientesActivos = this.activeClients.size > 0;
+        return res.status(200).json({ code: 200, datos: hayClientesActivos });
+    }
 
     async iniciarMonitoreoTodosSensores(req, res) {
         try {

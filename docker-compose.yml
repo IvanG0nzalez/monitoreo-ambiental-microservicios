@@ -1,0 +1,137 @@
+version: '3.9'
+
+services:
+  mysql-usuarios:
+    image: mysql:latest
+    container_name: mysql-usuarios
+    ports:
+      - "${DB_USUARIOS_PROD_PORT}:3306"
+    environment:
+      - MYSQL_ROOT_PASSWORD=${DB_USUARIOS_PROD_PASSWORD}
+      - MYSQL_DATABASE=${DB_USUARIOS_PROD_DATABASE}
+      - MYSQL_USER=${DB_USUARIOS_PROD_USERNAME}
+      - MYSQL_PASSWORD=${DB_USUARIOS_PROD_PASSWORD}
+    volumes:
+      - mysql-usuarios-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "--silent"]
+      interval: 5s
+      timeout: 10s
+      retries: 10
+      start_period: 5s
+  
+  mysql-cuentas:
+    image: mysql:latest
+    container_name: mysql-cuentas
+    ports:
+      - "${DB_CUENTAS_PROD_PORT}:3306"
+    environment:
+      - MYSQL_ROOT_PASSWORD=${DB_CUENTAS_PROD_PASSWORD}
+      - MYSQL_DATABASE=${DB_CUENTAS_PROD_DATABASE}
+      - MYSQL_USER=${DB_CUENTAS_PROD_USERNAME}
+      - MYSQL_PASSWORD=${DB_CUENTAS_PROD_PASSWORD}
+    volumes:
+      - mysql-cuentas-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "--silent"]
+      interval: 5s
+      timeout: 10s
+      retries: 10
+      start_period: 5s
+
+  mysql-sensores:
+    image: mysql:latest
+    container_name: mysql-sensores
+    ports:
+      - "${DB_SENSORES_PROD_PORT}:3306"
+    environment:
+      - MYSQL_ROOT_PASSWORD=${DB_SENSORES_PROD_PASSWORD}
+      - MYSQL_DATABASE=${DB_SENSORES_PROD_DATABASE}
+      - MYSQL_USER=${DB_SENSORES_PROD_USERNAME}
+      - MYSQL_PASSWORD=${DB_SENSORES_PROD_PASSWORD}
+    volumes:
+      - mysql-sensores-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "--silent"]
+      interval: 5s
+      timeout: 10s
+      retries: 10
+      start_period: 5s
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: rabbitmq
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_DEFAULT_USER}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_DEFAULT_PASS}
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmqctl", "status"]
+      interval: 5s
+      timeout: 10s
+      retries: 10
+      start_period: 5s
+  
+  servicio-usuarios:
+    build: ./microservicio-usuarios
+    image: microservicio-usuarios:v1
+    container_name: microservicio-usuarios
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      mysql-usuarios:
+        condition: service_healthy
+    env_file:
+      - ./microservicio-usuarios/.env
+  
+  servicio-cuentas:
+    build: ./microservicio-cuentas
+    image: microservicio-cuentas:v1
+    container_name: microservicio-cuentas
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      mysql-cuentas:
+        condition: service_healthy
+    env_file:
+      - ./microservicio-cuentas/.env
+
+  servicio-sensores:
+    build: ./microservicio-sensores
+    image: microservicio-sensores:v1
+    container_name: microservicio-sensores
+    depends_on:
+      mysql-sensores:
+        condition: service_healthy
+    env_file:
+      - ./microservicio-sensores/.env
+  
+  nginx:
+    build: .
+    ports:
+      - "80:80"
+    image: nginx:v1
+    container_name: nginx
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf
+    depends_on:
+      - servicio-usuarios
+      - servicio-cuentas
+      - servicio-sensores
+
+  frontend:
+    build: ./frontend-microservicios
+    image: frontend-microservicios:v1
+    container_name: frontend-microservicios
+    ports:
+      - "3000:3000"
+    depends_on:
+      - nginx
+ 
+   
+volumes:
+  mysql-usuarios-data:
+  mysql-cuentas-data:
+  mysql-sensores-data:
+  rabbitmq-data:

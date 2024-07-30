@@ -14,10 +14,13 @@ import {
   Select,
   MenuItem,
   Box,
+  Skeleton,
 } from "@mui/material";
 import PageContainer from "@/app/(DashboardLayout)/components/container/PageContainer";
 import BlankCard from "@/app/(DashboardLayout)/components/shared/BlankCard";
 import AddIcon from "@mui/icons-material/Add";
+import StopCircleIcon from '@mui/icons-material/StopCircle';
+import PlayCircleFilledWhiteIcon from '@mui/icons-material/PlayCircleFilledWhite';
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import ThermostatIcon from "@mui/icons-material/Thermostat";
@@ -28,7 +31,7 @@ import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { getToken } from "@/hooks/SessionUtils";
 import DashboardCard from "../../components/shared/DashboardCard";
-import { api_sensores } from "@/hooks/Api";
+import { api_sensores, api_usuarios } from "@/hooks/Api";
 import { useSnackbar } from "notistack";
 
 interface Sensor {
@@ -43,7 +46,10 @@ const SensorDisplayPage = () => {
   const token = getToken();
   const { enqueueSnackbar } = useSnackbar();
 
+  const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
   const [sensors, setSensors] = useState<Sensor[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [noData, setNoData] = useState(true);
 
   const [newSensor, setNewSensor] = useState<Sensor>({
     alias: "",
@@ -68,22 +74,82 @@ const SensorDisplayPage = () => {
     if (!token) {
       router.push("/");
     }
-  }, []);
+  }, [token, router]);
+
+  useEffect(() => {
+    const checkAdminStatus = async () => {
+      try {
+        const response = await api_usuarios.validar_admin(token);
+        if (response.data.code === 200) {
+          setIsAdmin(response.data.datos);
+        } else {
+          setIsAdmin(false);
+        }
+      } catch (error) {
+        setIsAdmin(false);
+      }
+
+    };
+    checkAdminStatus();
+
+  }, [token]);
+
+  useEffect(() => {
+    if (isAdmin === false) {
+      router.back();
+    }
+  }, [isAdmin, router]);
+
 
   useEffect(() => {
     const fetchSensors = async () => {
-      const response = await api_sensores.listar(token);
-      if (response.data.code !== 200) {
-        enqueueSnackbar(response.data.msg, { variant: "error" });
+      try {
+        const response = await api_sensores.listar(token);
+        if (response.data.code !== 200) {
+          enqueueSnackbar(response.data.msg, { variant: "error" });
+          return;
+        }
+        setSensors(response.data.datos);
+        setLoading(false);
+        
+        if (response.data.datos.length === 0) {
+          enqueueSnackbar(response.data.msg, { variant: "info" });
+          setNoData(true);
+        } else {
+          setNoData(false);
+        }
+      } catch (error) {
+        console.error("Error al obetener los sensores", error);
+        setLoading(false);
         return;
       }
-      setSensors(response.data.datos);
     };
     fetchSensors();
-  }, [token]);
+  }, [token, enqueueSnackbar]);
 
   const handleCreateOpen = () => {
     setCreateOpen(true);
+  };
+
+  const handleIniciarMonioreo = async () => {
+    const response = await api_sensores.iniciar_monitoreo(token);
+
+    if (response.data.code !== 200) {
+      enqueueSnackbar(response.data.msg, { variant: "error" });
+      return;
+    }
+    enqueueSnackbar(response.data.msg, { variant: "success" });
+  };
+
+  const handleDetenerMonitoreo = async () => {
+    const response = await api_sensores.detener_monitoreo(token);
+
+    if (response.data.code !== 200) {
+      enqueueSnackbar(response.data.msg, { variant: "error" });
+      return;
+    }
+
+    enqueueSnackbar(response.data.msg, { variant: "success" });
   };
 
   const handleCreateClose = () => {
@@ -123,6 +189,7 @@ const SensorDisplayPage = () => {
       ...newSensor,
       external_id: response.data.datos.external_id,
     };
+    setNoData(false);
     setSensors([...sensors, sensorToAdd]);
     setNewSensor({
       alias: "",
@@ -135,7 +202,7 @@ const SensorDisplayPage = () => {
 
   const handleEditSensor = async () => {
     const response = await api_sensores.actualizar(editSensor.external_id, editSensor, token);
-    
+
     if (response.data.code !== 200) {
       enqueueSnackbar(response.data.msg, { variant: "error" });
       return;
@@ -181,6 +248,7 @@ const SensorDisplayPage = () => {
 
     const updatedSensors = sensors.filter((sensor) => sensor.external_id !== sensorToDelete);
     setSensors(updatedSensors);
+    setNoData(true);
     setDeleteOpen(false);
   };
 
@@ -198,51 +266,94 @@ const SensorDisplayPage = () => {
   };
 
   return (
-    <PageContainer title="Sensor" description="Vista de Sensores">
+    <PageContainer title="Sensores" description="Vista de Sensores">
       <DashboardCard title="Sensores">
         <Grid container spacing={3} justifyContent="center">
           <Grid item xs={12}>
-            <Button
-              variant="contained"
-              startIcon={<AddIcon />}
-              onClick={handleCreateOpen}
-            >
-              Agregar Sensor
-            </Button>
-          </Grid>
-          {sensors.map((sensor) => (
-            <Grid item key={sensor.external_id} xs={12} sm={6} md={4} lg={3}>
-              <BlankCard>
-                <Box display="flex" justifyContent="space-between" alignItems="center">
-                  <CardContent>
-                    <Typography variant="h6">{sensor.alias}</Typography>
+            <Box display="flex" justifyContent="space-between" alignItems="center">
 
-                    <Typography variant="body1" color="textSecondary">
-                      Tipo: {sensor.tipo_medicion}
-                    </Typography>
+              <Button
+                variant="contained"
+                startIcon={<AddIcon />}
+                onClick={handleCreateOpen}
+              >
+                Agregar Sensor
+              </Button>
+              <Box display="flex" gap={2}>
+
+                <Button
+                  variant="contained"
+                  color="success"
+                  startIcon={<PlayCircleFilledWhiteIcon />}
+                  onClick={handleIniciarMonioreo}
+                  disabled={loading || noData}
+                >
+                  Iniciar monitoreo
+                </Button>
+
+                <Button
+                  variant="contained"
+                  color="error"
+                  startIcon={<StopCircleIcon />}
+                  onClick={handleDetenerMonitoreo}
+                  disabled={loading || noData}
+                >
+                  Detener monitoreo
+                </Button>
+              </Box>
+            </Box>
+          </Grid>
+          {loading ? (
+            Array.from({ length: 3 }).map((_, index) => (
+              <Grid item key={index} xs={12} sm={6} md={4} lg={3}>
+                <BlankCard>
+
+                  <CardContent>
+                    <Box display="flex" justifyContent="end">
+                      <Skeleton variant="circular" width={40} height={40} />
+                    </Box>
+                    <Skeleton variant="text" height={40} />
+                    <Skeleton variant="text" height={20} width="80%" />
                   </CardContent>
 
-                  <Box alignSelf="flex-start">{getSensorIcon(sensor.tipo_medicion)}</Box>
-                </Box>
+                </BlankCard>
+              </Grid>
+            ))
+          ) : (
+            sensors.map((sensor) => (
+              <Grid item key={sensor.external_id} xs={12} sm={6} md={4} lg={3}>
+                <BlankCard>
+                  <Box display="flex" justifyContent="space-between" alignItems="center">
+                    <CardContent>
+                      <Typography variant="h6">{sensor.alias}</Typography>
 
-                <Box display="flex" alignItems="right" alignContent="end" justifyContent="end">
-                  <IconButton
-                    color="warning"
-                    onClick={() => handleEditOpen(sensor)}
-                  >
-                    <EditIcon />
-                  </IconButton>
+                      <Typography variant="body1" color="textSecondary">
+                        Tipo: {sensor.tipo_medicion}
+                      </Typography>
+                    </CardContent>
 
-                  <IconButton
-                    color="error"
-                    onClick={() => handleDeleteOpen(sensor.external_id)}
-                  >
-                    <DeleteIcon />
-                  </IconButton>
-                </Box>
-              </BlankCard>
-            </Grid>
-          ))}
+                    <Box alignSelf="flex-start">{getSensorIcon(sensor.tipo_medicion)}</Box>
+                  </Box>
+
+                  <Box display="flex" alignItems="right" alignContent="end" justifyContent="end">
+                    <IconButton
+                      color="warning"
+                      onClick={() => handleEditOpen(sensor)}
+                    >
+                      <EditIcon />
+                    </IconButton>
+
+                    <IconButton
+                      color="error"
+                      onClick={() => handleDeleteOpen(sensor.external_id)}
+                    >
+                      <DeleteIcon />
+                    </IconButton>
+                  </Box>
+                </BlankCard>
+              </Grid>
+            ))
+          )}
         </Grid>
       </DashboardCard>
 
@@ -294,8 +405,8 @@ const SensorDisplayPage = () => {
         <DialogTitle>Modificar Sensor</DialogTitle>
         <DialogContent>
           <TextField
-            name="name"
-            label="Nombre"
+            name="alias"
+            label="Alias"
             value={editSensor.alias}
             onChange={handleEditChange}
             fullWidth

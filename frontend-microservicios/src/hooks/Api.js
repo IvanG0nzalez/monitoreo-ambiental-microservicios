@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { save, saveToken } from './SessionUtils';
 
-const URL_BASE = "http://localhost:80/api";
+const URL_BASE = process.env.NEXT_PUBLIC_API_URL;
 
 const endpoints = {
     cuentas: {
@@ -9,10 +9,12 @@ const endpoints = {
         obtener: `${URL_BASE}/cuentas/`,
     },
     usuarios: {
-        obtener: `${URL_BASE}/usuarios/`,
+        listar: `${URL_BASE}/usuarios/`,
+        obtener: `${URL_BASE}/usuarios/usuario`,
         crear: `${URL_BASE}/usuarios/crear`,
         actualizar: `${URL_BASE}/usuarios/actualizar/`,
         eliminar: `${URL_BASE}/usuarios/eliminar/`,
+        validar: `${URL_BASE}/usuarios/validar`,
     },
     roles: {
         obtener: `${URL_BASE}/roles/`,
@@ -26,12 +28,13 @@ const endpoints = {
         ultimo_registro: `${URL_BASE}/sensores/ultimo_registro`,
         actualizar: `${URL_BASE}/sensores/actualizar/`,
         eliminar: `${URL_BASE}/sensores/eliminar/`,
-        iniciar_monitoreo: `${URL_BASE}/sensores/iniciar-monitoreo`,
-        detener_monitoreo: `${URL_BASE}/sensores/detener-monitoreo`,
+        iniciar_monitoreo: `${URL_BASE}/sensores/monitoreo/iniciar`,
+        detener_monitoreo: `${URL_BASE}/sensores/monitoreo/detener`,
+        estado_monitoreo: `${URL_BASE}/sensores/monitoreo/estado`,
     },
     registros: {
         listar_hoy: `${URL_BASE}/registros/listar/hoy`,
-        listar: `${URL_BASE}/registros`,
+        listar: `${URL_BASE}/registros/listar`,
         listar_por_fecha: `${URL_BASE}/registros/listar/fecha/`,
     },
 };
@@ -51,11 +54,12 @@ export const api_cuentas = {
 };
 
 export const api_usuarios = {
-    listar: async (token) => await axios.get(endpoints.usuarios.obtener, { headers: { token: token }}),
-    obtener: async (external_id, token) => await axios.get(endpoints.usuarios.obtener + external_id, { headers: { token: token }}),
+    listar: async (token) => await axios.get(endpoints.usuarios.listar, { headers: { token: token }}),
+    obtener: async (token) => await axios.get(endpoints.usuarios.obtener, { headers: { token: token }}),
     crear: async (datos, token) => await axios.post(endpoints.usuarios.crear, datos, { headers: { token: token }}),
     actualizar: async (external_id, datos, token) => await axios.patch(endpoints.usuarios.actualizar + external_id, datos, { headers: { token: token }}),
     eliminar: async (external_id, token) => await axios.delete(endpoints.usuarios.eliminar + external_id, { headers: { token: token }}),
+    validar_admin: async (token) => await axios.get(endpoints.usuarios.validar, { headers: { token: token }}),
 };
 
 export const api_roles = {
@@ -73,12 +77,14 @@ export const api_sensores = {
     ultimo_registro: async () => await axios.get(endpoints.sensores.ultimo_registro),
     actualizar: async (external_id, datos, token) => await axios.patch(endpoints.sensores.actualizar + external_id, datos, token),
     eliminar: async (external_id, token) => await axios.delete(endpoints.sensores.eliminar + external_id, { headers: { token: token }}),
-    iniciar_monitoreo: async (token) => await axios.post(endpoints.sensores.iniciar_monitoreo, { headers: { token: token }}),
-    detener_monitoreo: async (token) => await axios.post(endpoints.sensores.detener_monitoreo, { headers: { token: token }}),
+    iniciar_monitoreo: async (token) => await axios.post(endpoints.sensores.iniciar_monitoreo, {}, { headers: { token: token }}),
+    detener_monitoreo: async (token) => await axios.post(endpoints.sensores.detener_monitoreo, {}, { headers: { token: token }}),
+    estado_monitoreo: async (token) => await axios.get(endpoints.sensores.estado_monitoreo, { headers: { token: token }}),
 };
 
 export const api_registros = {
     listar_hoy: async (token) => await axios.get(endpoints.registros.listar_hoy, { headers: { token: token }}),
     listar: async (token) => await axios.get(endpoints.registros.listar, { headers: { token: token }}),
     listar_por_fecha: async (fecha, token) => await axios.get(endpoints.registros.listar_por_fecha + fecha, { headers: { token: token }}),
+    listar_entre_fechas: async (fecha_inicio, fecha_fin, token) => await axios.get(endpoints.registros.listar + '/' + fecha_inicio + '/' + fecha_fin, { headers: { token: token }}),
 };

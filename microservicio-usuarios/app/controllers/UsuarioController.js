@@ -57,14 +57,10 @@ class UsuarioController {
 
 
     async obtener(req, res) {
-        const { external_id } = req.params;
-
-        if (!external_id) {
-            return res.status(202).json({ msg: 'Parámetros incorrectos', code: 400, datos: {} });
-        }
+        const id_usuario = req.id_usuario;
 
         const usuario_obtenido = await usuario.findOne({
-            where: { external_id: external_id },
+            where: { id: id_usuario },
             attributes: ['cedula', 'nombres', 'apellidos', 'external_id'],
             include: [{
                 model: rol,
@@ -78,6 +74,29 @@ class UsuarioController {
         }
 
         return res.status(200).json({ msg: 'Usuario encontrado', code: 200, datos: usuario_obtenido });
+    }
+
+    async es_admin(req, res) {
+        const id_usuario = req.id_usuario;
+        const usuario_obtenido = await usuario.findOne({
+            where: { id: id_usuario },
+            attributes: ['cedula', 'nombres', 'apellidos', 'external_id'],
+            include: [{
+                model: rol,
+                as: 'rol',
+                attributes: ['nombre', 'external_id']
+            }]
+        });
+
+        if (!usuario_obtenido) {
+            return res.status(202).json({ msg: 'Usuario no encontrado', code: 404, datos: {} });
+        }
+
+        if (usuario_obtenido.rol.nombre === 'Administrador') {
+            return res.status(200).json({ msg: 'Usuario es administrador', code: 200, datos: true });
+        }
+
+        return res.status(200).json({ msg: 'Usuario no es administrador', code: 200, datos: false });
     }
 
     async crear(req, res) {
@@ -118,7 +137,7 @@ class UsuarioController {
                 }
             });
             await transaction.commit();
-            return res.status(201).json({ msg: 'Usuario y cuenta creados', code: 201 });
+            return res.status(201).json({ msg: 'Usuario y cuenta creados', code: 201, datos: nuevo_usuario.external_id });
         } catch (error) {
             await transaction.rollback();
             return res.status(202).json({ msg: 'Error al crear usuario', code: 500, datos: error });
