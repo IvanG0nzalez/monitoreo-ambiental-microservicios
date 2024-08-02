@@ -30,12 +30,13 @@ const GraficaValoresMedidos = () => {
         }
     ]);
     const [registrosCO2, setRegistrosCO2] = useState([]);
-    const [registrosTempertura, setRegistrosTemperatura] = useState([]);
+    const [registrosTemperatura, setRegistrosTemperatura] = useState([]);
     const [registrosHumedad, setRegistrosHumedad] = useState([]);
     const [loading, setLoading] = useState(true);
     const [noData, setNoData] = useState(true);
     // select
     const [medida, setMedida] = React.useState('CO2');
+    const [isFirstLoad, setIsFirstLoad] = useState(true);
 
     useEffect(() => {
         const fetchRegistros = async () => {
@@ -43,11 +44,17 @@ const GraficaValoresMedidos = () => {
                 const response = await api_registros.listar_hoy(token);
 
                 if (response.data.code === 202) {
-                    enqueueSnackbar(response.data.msg, { variant: "info" });
+                    if (isFirstLoad) {
+                        enqueueSnackbar(response.data.msg, { variant: "info" });
+                    }
                 } else if (response.data.code === 200) {
-                    enqueueSnackbar(response.data.msg, { variant: "success" });
+                    if (isFirstLoad) {
+                        enqueueSnackbar(response.data.msg, { variant: "success" });
+                    }
                 } else if (response.data.code !== 200) {
-                    enqueueSnackbar(response.data.msg, { variant: "error" });
+                    if (isFirstLoad) {
+                        enqueueSnackbar(response.data.msg, { variant: "error" });
+                    }
                     return;
                 }
 
@@ -72,7 +79,17 @@ const GraficaValoresMedidos = () => {
             }
         };
         fetchRegistros();
-    }, [token, enqueueSnackbar]);
+
+        const intervalId = setInterval(fetchRegistros, 20000);
+
+        return () => clearInterval(intervalId);
+    }, [token, enqueueSnackbar, isFirstLoad]);
+
+    useEffect(() => {
+        if (!loading && isFirstLoad) {
+            setIsFirstLoad(false);
+        }
+    }, [loading, isFirstLoad]);
 
     const handleChange = (event: any) => {
         setMedida(event.target.value);
@@ -88,7 +105,7 @@ const GraficaValoresMedidos = () => {
 
     const registroPorTipo: { [key: string]: any[] } = {
         CO2: registrosCO2,
-        Temperatura: registrosTempertura,
+        Temperatura: registrosTemperatura,
         Humedad: registrosHumedad,
     };
 
@@ -206,12 +223,21 @@ const GraficaValoresMedidos = () => {
     };
 
     // chart data
-    const chartData: any = [
+    const [chartData, setChartData] = useState<any>([
         {
             name: medida,
             data: valores,
         }
-    ];
+    ]);
+
+    useEffect(() => {
+        setChartData([
+            {
+                name: medida,
+                data: valores,
+            }
+        ]);
+    }, [medida, valores]);
 
     return (
         <DashboardCard title={`Valor Medidos - ${formatDate(registros[0]?.fecha)}`} action={
